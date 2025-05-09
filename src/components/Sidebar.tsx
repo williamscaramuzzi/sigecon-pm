@@ -1,0 +1,109 @@
+// src/components/Sidebar.tsx
+import React from 'react';
+import { 
+  Drawer, 
+  List, 
+  ListItemButton, 
+  ListItemIcon, 
+  ListItemText, 
+  Divider, 
+  Box, 
+  Typography
+} from '@mui/material';
+import { 
+  Dashboard as DashboardIcon,
+  ShoppingCart as ShoppingCartIcon,
+  AddCircleOutline as AddIcon,
+  Search as SearchIcon,
+  ListAlt as ListIcon, 
+  Settings as SettingsIcon
+} from '@mui/icons-material';
+import { useAuth } from '../contexts/AuthContext';
+import { useNavigate } from 'react-router-dom';
+import policiaLogo from '../assets/logopmms.svg'; // Use o mesmo logo da tela de login
+
+interface SidebarProps {
+  open: boolean;
+  onClose: () => void;
+}
+
+const Sidebar: React.FC<SidebarProps> = ({ open, onClose }) => {
+  const { isGerente } = useAuth();
+  const navigate = useNavigate();
+  
+  const navigateTo = (path: string) => {
+    navigate(path);
+    onClose();
+  };
+  
+  return (
+    <Drawer
+      anchor="left"
+      open={open}
+      onClose={onClose}
+      sx={{
+        '& .MuiDrawer-paper': {
+          width: 240,
+          boxSizing: 'border-box',
+        },
+      }}
+    >
+      <Box
+        sx={{
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          padding: 2,
+        }}
+      >
+        <Box 
+          component="img"
+          src={policiaLogo}
+          alt="Polícia Militar"
+          sx={{ height: 60, mb: 1 }}
+        />
+        <Typography variant="subtitle1" fontWeight="bold">
+          SIGECOM-PM
+        </Typography>
+      </Box>
+      
+      <Divider />
+      
+      <List>
+        <ListItemButton onClick={() => navigateTo('/dashboard')}>
+          <ListItemIcon>
+            <DashboardIcon />
+          </ListItemIcon>
+          <ListItemText primary="Dashboard" />
+        </ListItemButton>
+                
+        <ListItemButton onClick={() => navigateTo('/consulta')}>
+          <ListItemIcon>
+            <SearchIcon />
+          </ListItemIcon>
+          <ListItemText primary="Consultar" />
+        </ListItemButton>
+        
+        {isGerente() && (
+          <>
+            <Divider />
+            <ListItemButton onClick={() => navigateTo('/cadastrar_processos')}>
+              <ListItemIcon>
+                <AddIcon />
+              </ListItemIcon>
+              <ListItemText primary="Novo Processo" />
+            </ListItemButton>
+            
+            <ListItemButton onClick={() => navigateTo('/configuracoes')}>
+              <ListItemIcon>
+                <SettingsIcon />
+              </ListItemIcon>
+              <ListItemText primary="Configurações" />
+            </ListItemButton>
+          </>
+        )}
+      </List>
+    </Drawer>
+  );
+};
+export {Sidebar}
