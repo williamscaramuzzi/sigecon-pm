@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { auth, db} from '../config/firebase';
+import {db} from '../config/firebase';
 import { 
   Box, 
   Grid, 
@@ -12,27 +12,34 @@ import {
   ListItem,
   ListItemText,
   Divider,
-  Button
+  Button,
+  IconButton
 } from '@mui/material';
 import { 
   ShoppingCart as ShoppingCartIcon,
   CheckCircle as CheckCircleIcon,
   HourglassEmpty as PendingIcon, 
-  Notifications as NotificationsIcon
+  Notifications as NotificationsIcon,
+  Visibility as VisibilityIcon
 } from '@mui/icons-material';
-import { collection, query, where, doc, getDoc, getDocs, orderBy, limit, Timestamp } from 'firebase/firestore';
+import { collection, query, where, doc, getDoc, getDocs, orderBy, limit, Timestamp, getCountFromServer} from 'firebase/firestore';
 import { useAuth } from '../contexts/AuthContext';
+import { useNavigate } from 'react-router-dom';
 
 interface ProcessoCompra {
-  nup: string,
-  fonte_recebimento: string,
-  objeto: string,
-  quantidade: number,
-  uopm_beneficiada: string,
-  valor: number
+  id?: string;
+  nup: string;
+  fonte_recebimento: string;
+  objeto: string;
+  quantidade: number;
+  uopm_beneficiada: string;
+  valor: number;
+  data_etapa_mais_recente: string,
+  status: string
 }
 
 const Dashboard: React.FC = () => {
+  const navigate = useNavigate();
   const { currentUser, userRole } = useAuth();
   const [processos_totais, setProcessosTotais] = useState(0)
   const [processos_atrasados, setProcessosAtrasados] = useState(0)
@@ -45,7 +52,8 @@ const Dashboard: React.FC = () => {
     const fetchData = async () => {
       try {
         const processosRef = collection(db, "processos")
-        const snapShot = await getDocs(processosRef)
+        const q = query(processosRef, orderBy("data_etapa_mais_recente", "asc"), limit(3))
+        const snapShot = await getDocs(q)
         let lista_processos_no_banco: ProcessoCompra[] = []
         snapShot.forEach(processo =>{
           const processo_tipado: ProcessoCompra = {
@@ -54,13 +62,16 @@ const Dashboard: React.FC = () => {
             objeto: processo.data().objeto,
             quantidade: processo.data().quantidade,
             uopm_beneficiada: processo.data().uopm_beneficiada,
-            valor: processo.data().valor
+            valor: processo.data().valor,
+            data_etapa_mais_recente: processo.data().data_etapa_mais_recente,
+            status: processo.data().status
           }
           lista_processos_no_banco.push(processo_tipado)
         })
 
         setProcessos(lista_processos_no_banco)
-        setProcessosTotais(lista_processos_no_banco.length)
+        const tamanho_da_tabela_processos = await getCountFromServer(processosRef)
+        setProcessosTotais(tamanho_da_tabela_processos.data().count)
       } catch (error) {
         console.error('Erro ao buscar dados:', error);
       } finally {
@@ -71,10 +82,20 @@ const Dashboard: React.FC = () => {
     fetchData();
   }, []);
 
-  // Função auxiliar para formatar datas
-  const formatDate = (timestamp: Timestamp) => {
-    const date = timestamp.toDate();
-    return new Intl.DateTimeFormat('pt-BR').format(date);
+   // Função para ver detalhes do processo
+  const handleVerProcesso = (id: string) => {
+    navigate(`/processo/${id}`);
+  };
+
+  // Formatar data
+  const formatarData = (data: string) => {
+    if (!data) return '';
+    try {
+      const date = new Date(data);
+      return new Intl.DateTimeFormat('pt-BR').format(date);
+    } catch (e) {
+      return data;
+    }
   };
 
   return (
@@ -119,7 +140,7 @@ const Dashboard: React.FC = () => {
             <PendingIcon sx={{ fontSize: 40, mr: 2, color: '#ff9800' }} />
             <Box>
               <Typography variant="h5">{processos_atrasados}</Typography>
-              <Typography variant="body2" color="text.secondary">Processos muito atrasados</Typography>
+              <Typography variant="body2" color="text.secondary">Processos muito atrasados (FALTA IMPLEMENTAR)</Typography>
             </Box>
           </Paper>
         </Grid>
@@ -137,7 +158,7 @@ const Dashboard: React.FC = () => {
             <CheckCircleIcon sx={{ fontSize: 40, mr: 2, color: '#2e7d32' }} />
             <Box>
               <Typography variant="h5">{processos_concluidos}</Typography>
-              <Typography variant="body2" color="text.secondary">Processos Concluídos</Typography>
+              <Typography variant="body2" color="text.secondary">Processos Concluídos (FALTA IMPLEMENTAR)</Typography>
             </Box>
           </Paper>
         </Grid>
@@ -146,7 +167,7 @@ const Dashboard: React.FC = () => {
         <Grid size={{ xs: 12, md: 8 }}>
           <Card elevation={2}>
             <CardHeader 
-              title="Processos Recentes" 
+              title="Processos mais atrasados" 
               titleTypographyProps={{ variant: 'h6' }} 
             />
             <Divider />
@@ -158,9 +179,29 @@ const Dashboard: React.FC = () => {
                   {processos.map((processo) => (
                     <React.Fragment key={processo.nup}>
                       <ListItem>
-                        <ListItemText
-                          primary={`${processo.nup} - ${processo.objeto}`}
-                          secondary={`Status: ${processo.fonte_recebimento} | Valor: ${processo.valor}`}
+                        <ListItemText 
+                          primary={<React.Fragment>
+                            <IconButton 
+                                size="small" 
+                                onClick={() => handleVerProcesso(processo.id || processo.nup)}
+                                color="primary"
+                              >
+                                <VisibilityIcon fontSize="small" />
+                              </IconButton>
+                            {processo.nup} - {processo.objeto}&nbsp;
+                            <Typography component="span"variant="body2"sx={{ color: 'red', display: 'inline', fontWeight: "bold" }}>
+                                {formatarData(processo.data_etapa_mais_recente)}
+                            </Typography>
+
+                          </React.Fragment>}
+                          secondary={
+                            <Typography component="span"variant="body2"sx={{ color: 'text.primary', display: 'inline' }}>
+                            Status: {processo.status} |  Valor: {new Intl.NumberFormat('pt-BR', { 
+                              style: 'currency', 
+                              currency: 'BRL' 
+                            }).format(processo.valor)}`
+                            </Typography>
+                          }
                         />
                       </ListItem>
                       <Divider component="li" />

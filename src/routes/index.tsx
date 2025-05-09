@@ -1,4 +1,3 @@
-// src/routes/index.tsx
 import React from 'react';
 import { Navigate, useRoutes } from 'react-router-dom';
 import Layout from '../components/Layout';
@@ -6,14 +5,9 @@ import Login from '../pages/Login';
 import Dashboard from '../pages/Dashboard';
 import { useAuth } from '../contexts/AuthContext';
 import CadastrarProcesso from '../pages/CadastrarProcessos';
+import ConsultarProcessos from '../pages/ConsultarProcessos';
+import VisualizarProcesso from '../pages/VisualizarProcesso';
 
-// Componente de páginas em branco para serem implementadas posteriormente
-const NotImplemented: React.FC<{ pageName: string }> = ({ pageName }) => (
-  <div>
-    <h2>{pageName}</h2>
-    <p>Esta página está em desenvolvimento e será implementada em breve.</p>
-  </div>
-);
 
 // Rotas protegidas que requerem autenticação
 const ProtectedRoute: React.FC<{ children: React.ReactNode, requiresManager?: boolean }> = ({ 
@@ -63,7 +57,15 @@ const AppRoutes: React.FC = () => {
         {
           path: 'cadastrar_processos',
           element: <CadastrarProcesso />,
-        }
+        },
+        {
+          path: 'consultar_processos',
+          element: <ConsultarProcessos />,
+        },
+        {
+          path: '/processo/:id',
+          element: <VisualizarProcesso />,
+        },
       ]
     },
     {

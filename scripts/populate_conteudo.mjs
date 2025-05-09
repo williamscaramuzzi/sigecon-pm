@@ -57,28 +57,23 @@ async function main(){
 
       console.log(`Etapa adicionada ao processo ${nup}: ${status}`);
     }
-await criarProcesso("31.189.599-2024", "FESP 22", "PM-4 - COMANDO", "LICENÇAS VITÁLICIAS SOFTWARE", 2, 31384.00);
 
-await adicionarEtapa("31.189.599-2024", "DFD - PM-4", "01/07/2024");
-await adicionarEtapa("31.189.599-2024", "Reserva Orçamentária", "25/07/2024");
-await adicionarEtapa("31.189.599-2024", "Instrumento de Oficialização do Pedido", "30/07/2024");
-await adicionarEtapa("31.189.599-2024", "Designação da Equipe de Planejamento", "18/08/2024");
-await adicionarEtapa("31.189.599-2024", "ETP (cancelado)", "09/09/2024");
-await adicionarEtapa("31.189.599-2024", "TR (cancelado)", "13/09/2024");
-await adicionarEtapa("31.189.599-2024", "Despacho da CCMP ao agente de contratação para readequar o ETP / TR", "30/09/2024");
-await adicionarEtapa("31.189.599-2024", "ETP READEQUADO", "18/11/2024");
-await adicionarEtapa("31.189.599-2024", "TR READEQUADO", "28/11/2024");
-await adicionarEtapa("31.189.599-2024", "Encaminhado ao CCMP", "17/01/2025");
-await adicionarEtapa("31.189.599-2024", "Despacho de Pré Empenho", "05/02/2025");
-await adicionarEtapa("31.189.599-2024", "Encaminhado o pré empenho", "17/02/2025");
-await adicionarEtapa("31.189.599-2024", "Minuta Autorizada", "11/03/2025");
-await adicionarEtapa("31.189.599-2024", "Despacho da ASSATE em desconformidade ao pedido de INEXIGIBILIDADE", "30/04/2025");
+await criarProcesso("31.229.279-2024", "MATERIAL EDUCATIVO", "PROERD", "Emenda Parlamentar", 1, 50000.00);
+await adicionarEtapa("31.229.279-2024", "DFD - ELKA FERRAZ", "01/08/2024");
+await adicionarEtapa("31.229.279-2024", "Reserva Orçamentária", "29/08/2024");
+await adicionarEtapa("31.229.279-2024", "Instrumento de Oficialização de Pedido", "11/09/2024");
+await adicionarEtapa("31.229.279-2024", "ETP - Rudi Barcellos / Adriano Lemes", "01/04/2025");
+await adicionarEtapa("31.229.279-2024", "TR - Rudi Barcellos / Adriano Lemes", "03/04/2025");
+await adicionarEtapa("31.229.279-2024", "Despacho da CCMP para SEL / SAD / PESQUISA DE PREÇO", "09/04/2025");
+
+
 
   } catch (error) {
     console.error('Erro ao executar o script:', error);
   }
   
 }
+
 
 
 main();

@@ -2,14 +2,9 @@ import React, { useState } from 'react';
 import { 
   Box, 
   Typography, 
-  Paper, 
   Grid, 
   TextField, 
   Button, 
-  FormControl,
-  InputLabel,
-  Select,
-  MenuItem,
   Card,
   CardContent,
   CardHeader,
@@ -22,8 +17,8 @@ import {
   Clear as ClearIcon 
 } from '@mui/icons-material';
 import { useAuth } from '../contexts/AuthContext';
-import { collection, query, where, doc, getDoc, getDocs, setDoc, limit, Timestamp } from 'firebase/firestore';
-import { auth, db} from '../config/firebase';
+import { doc, setDoc } from 'firebase/firestore';
+import { db} from '../config/firebase';
 
 interface ProcessoCompra {
   nup: string,
