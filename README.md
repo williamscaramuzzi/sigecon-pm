@@ -1,6 +1,6 @@
 # SIGECOM-PM
 
-Sistema de Gerenciamento de Compras da Polícia Militar - Uma aplicação React com TypeScript, Vite e Firebase.
+Sistema de Gerenciamento de Compras da Polícia Militar
 
 ## Sobre o Projeto
 
@@ -45,65 +45,6 @@ sigecom-pm/
 └── ...                # Arquivos de configuração
 ```
 
-## Como Iniciar
-
-### Pré-requisitos
-
-- Node.js 16+ instalado
-- Conta no Firebase
-- Git (opcional)
-
-### Configuração
-
-1. Clone o repositório (ou baixe os arquivos):
-   ```bash
-   git clone <repositório> sigecom-pm
-   cd sigecom-pm
-   ```
-
-2. Instale as dependências:
-   ```bash
-   npm install
-   ```
-
-3. Configure o Firebase:
-   - Crie um projeto no [Firebase Console](https://console.firebase.google.com/)
-   - Ative o Authentication (e-mail/senha)
-   - Ative o Firestore Database
-   - Copie as credenciais do seu projeto Firebase
-
-4. Crie um arquivo `.env` na raiz do projeto com as seguintes variáveis:
-   ```
-   VITE_FIREBASE_API_KEY=seu-api-key
-   VITE_FIREBASE_AUTH_DOMAIN=seu-auth-domain
-   VITE_FIREBASE_PROJECT_ID=seu-project-id
-   VITE_FIREBASE_STORAGE_BUCKET=seu-storage-bucket
-   VITE_FIREBASE_MESSAGING_SENDER_ID=seu-messaging-sender-id
-   VITE_FIREBASE_APP_ID=seu-app-id
-   ```
-
-5. Atualize o arquivo `src/config/firebase.ts` para usar as variáveis de ambiente:
-   ```typescript
-   const firebaseConfig = {
-     apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
-     authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
-     projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
-     storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
-     messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
-     appId: import.meta.env.VITE_FIREBASE_APP_ID
-   };
-   ```
-
-6. Inicie o servidor de desenvolvimento:
-   ```bash
-   npm run dev
-   ```
-
-7. Para popular o banco com dados de exemplo, configure o script `scripts/populateFirebase.js`:
-   - Baixe o arquivo de chave privada do service account no console do Firebase
-   - Instale o pacote firebase-admin: `npm install firebase-admin`
-   - Execute o script: `node scripts/populateFirebase.js`
-
 ## Perfis de Acesso
 
 ### Gerente
@@ -114,15 +55,6 @@ sigecom-pm/
 ### Usuário
 - Acesso somente leitura
 - Pode consultar e visualizar processos
-- Não pode modificar dados
-
-## Contribuição
-
-1. Faça um fork do projeto
-2. Crie uma branch para sua feature (`git checkout -b feature/amazing-feature`)
-3. Commit suas mudanças (`git commit -m 'Add some amazing feature'`)
-4. Push para a branch (`git push origin feature/amazing-feature`)
-5. Abra um Pull Request
 
 ## Licença
 
