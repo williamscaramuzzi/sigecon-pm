@@ -52,7 +52,7 @@ const Dashboard: React.FC = () => {
     const fetchData = async () => {
       try {
         const processosRef = collection(db, "processos")
-        const q = query(processosRef, orderBy("data_etapa_mais_recente", "asc"), limit(3))
+        const q = query(processosRef, orderBy("data_etapa_mais_recente", "asc"), limit(5))
         const snapShot = await getDocs(q)
         let lista_processos_no_banco: ProcessoCompra[] = []
         snapShot.forEach(processo =>{
@@ -97,7 +97,21 @@ const Dashboard: React.FC = () => {
       return data;
     }
   };
+function decidirCor(data: string): string {
+  const dataInformada = new Date(data);
+  const hoje = new Date();
 
+  // Zera a hora para comparar só as datas (sem horas)
+  dataInformada.setHours(0, 0, 0, 0);
+  hoje.setHours(0, 0, 0, 0);
+
+  const diffMs = hoje.getTime() - dataInformada.getTime();
+  const diffDias = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+
+  if (diffDias > 30) return 'red';
+  if (diffDias > 15) return 'orange';
+  return 'green';
+}
   return (
     <Box>
       <Typography variant="h4" component="h1" gutterBottom>
@@ -189,7 +203,7 @@ const Dashboard: React.FC = () => {
                                 <VisibilityIcon fontSize="small" />
                               </IconButton>
                             {processo.nup} - {processo.objeto}&nbsp;
-                            <Typography component="span"variant="body2"sx={{ color: 'red', display: 'inline', fontWeight: "bold" }}>
+                            <Typography component="span"variant="body2"sx={{ color: `${decidirCor(processo.data_etapa_mais_recente)}`, display: 'inline', fontWeight: "bold" }}>
                                 {formatarData(processo.data_etapa_mais_recente)}
                             </Typography>
 
@@ -199,7 +213,7 @@ const Dashboard: React.FC = () => {
                             Status: {processo.status} |  Valor: {new Intl.NumberFormat('pt-BR', { 
                               style: 'currency', 
                               currency: 'BRL' 
-                            }).format(processo.valor)}`
+                            }).format(processo.valor)}
                             </Typography>
                           }
                         />

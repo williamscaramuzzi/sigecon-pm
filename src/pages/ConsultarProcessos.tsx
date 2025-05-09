@@ -199,6 +199,23 @@ const navigate = useNavigate();
       return data;
     }
   };
+function decidirCor(data: string): string {
+  const dataInformada = new Date(data);
+  const hoje = new Date();
+
+  // Zera a hora para comparar só as datas (sem horas)
+  dataInformada.setHours(0, 0, 0, 0);
+  hoje.setHours(0, 0, 0, 0);
+
+  const diffMs = hoje.getTime() - dataInformada.getTime();
+  const diffDias = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+
+  if (diffDias > 30) return 'red';
+  if (diffDias > 15) return 'orange';
+  return 'green';
+}
+
+
 
   return (
     <Box>
@@ -342,7 +359,7 @@ const navigate = useNavigate();
                               currency: 'BRL' 
                             }).format(processo.valor)}
                           </TableCell>
-                          <TableCell>{formatarData(processo.data_etapa_mais_recente)}</TableCell>
+                          <TableCell sx={{color: `${decidirCor(processo.data_etapa_mais_recente)}`}}>{formatarData(processo.data_etapa_mais_recente)}</TableCell>
                           <TableCell>{processo.status}</TableCell>
                         </TableRow>
                       ))

@@ -42,8 +42,8 @@ interface ProcessoCompra {
   quantidade: number;
   uopm_beneficiada: string;
   valor: number;
-  data_etapa_mais_recente?: string;
-  status?: string;
+  data_etapa_mais_recente: string;
+  status: string;
 }
 
 // Interface para as etapas do processo
@@ -195,24 +195,20 @@ const VisualizarProcesso: React.FC = () => {
   };
   
   // Determinar cor do chip de status
-  const getStatusColor = (status: string) => {
-    switch (status?.toLowerCase()) {
-      case 'concluído':
-      case 'concluido':
-      case 'finalizado':
-        return 'success';
-      case 'em andamento':
-      case 'processando':
-        return 'info';
-      case 'pendente':
-      case 'aguardando':
-        return 'warning';
-      case 'cancelado':
-      case 'negado':
-        return 'error';
-      default:
-        return 'default';
-    }
+  const getStatusColor = (data: string) => {    
+      const dataInformada = new Date(data);
+      const hoje = new Date();
+
+      // Zera a hora para comparar só as datas (sem horas)
+      dataInformada.setHours(0, 0, 0, 0);
+      hoje.setHours(0, 0, 0, 0);
+
+      const diffMs = hoje.getTime() - dataInformada.getTime();
+      const diffDias = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+
+      if (diffDias > 30) return 'error';
+      if (diffDias > 15) return 'warning';
+      return 'success';
   };
   
   // Renderizar campo editável ou somente leitura
@@ -236,7 +232,6 @@ const VisualizarProcesso: React.FC = () => {
             <Box sx={{ mt: 1, display: 'flex', alignItems: 'center' }}>
               <TextField
                 fullWidth
-                size="small"
                 type={type}
                 value={editValues?.[field] || ''}
                 onChange={(e) => handleChangeField(field, type === 'number' ? Number(e.target.value) : e.target.value)}
@@ -246,7 +241,6 @@ const VisualizarProcesso: React.FC = () => {
               />
               <Box sx={{ ml: 1 }}>
                 <IconButton 
-                  size="small" 
                   color="primary" 
                   onClick={() => handleSaveField(field)}
                   disabled={saveLoading}
@@ -254,7 +248,6 @@ const VisualizarProcesso: React.FC = () => {
                   <SaveIcon fontSize="small" />
                 </IconButton>
                 <IconButton 
-                  size="small" 
                   color="inherit" 
                   onClick={() => handleCancelEdit(field)}
                 >
@@ -278,15 +271,15 @@ const VisualizarProcesso: React.FC = () => {
               }}
             >
               {field === 'objeto' ? (
-                <Typography variant="body1">{displayValue}</Typography>
+                <Typography variant="h6">{displayValue}</Typography>
               ) : field === 'status' ? (
                 <Chip 
                   label={displayValue} 
-                  size="small"
-                  color={getStatusColor(displayValue) as any}
+                  size="medium"
+                  color={"default"}
                 />
               ) : (
-                <Typography variant="body1" sx={{ fontWeight: field === 'nup' ? 'bold' : 'normal' }}>
+                <Typography variant="h6" sx={{ fontWeight: field === 'nup' ? 'bold' : 'normal' }}>
                   {displayValue}
                 </Typography>
               )}
@@ -315,6 +308,22 @@ const VisualizarProcesso: React.FC = () => {
     );
   };
   
+  function decidirCor(data: string): string {
+  const dataInformada = new Date(data);
+  const hoje = new Date();
+
+  // Zera a hora para comparar só as datas (sem horas)
+  dataInformada.setHours(0, 0, 0, 0);
+  hoje.setHours(0, 0, 0, 0);
+
+  const diffMs = hoje.getTime() - dataInformada.getTime();
+  const diffDias = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+
+  if (diffDias > 30) return 'red';
+  if (diffDias > 15) return 'orange';
+  return 'green';
+}
+
   if (loading) {
     return (
       <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '80vh' }}>
@@ -364,7 +373,7 @@ const VisualizarProcesso: React.FC = () => {
             <Chip 
               label={processo.status} 
               size="small"
-              color={getStatusColor(processo.status) as any}
+              color={getStatusColor(processo.data_etapa_mais_recente) as any}
               sx={{ mt: 1 }}
             />
           )}
@@ -417,7 +426,7 @@ const VisualizarProcesso: React.FC = () => {
                         <Chip 
                           label={etapa.status} 
                           size="small"
-                          color={getStatusColor(etapa.status) as any}
+                          color={"default"}
                         />
                       </TableCell>
                     </TableRow>
