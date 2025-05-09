@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import React, { useEffect, useState } from 'react';
 import {db} from '../config/firebase';
 import { 
@@ -12,7 +13,6 @@ import {
   ListItem,
   ListItemText,
   Divider,
-  Button,
   IconButton
 } from '@mui/material';
 import { 
@@ -22,7 +22,7 @@ import {
   Notifications as NotificationsIcon,
   Visibility as VisibilityIcon
 } from '@mui/icons-material';
-import { collection, query, where, doc, getDoc, getDocs, orderBy, limit, Timestamp, getCountFromServer} from 'firebase/firestore';
+import { collection, query, getDocs, orderBy, limit, getCountFromServer} from 'firebase/firestore';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 

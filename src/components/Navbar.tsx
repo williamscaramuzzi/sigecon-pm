@@ -14,10 +14,6 @@ import {
 import { 
   Menu as MenuIcon, 
   AccountCircle, 
-  Dashboard, 
-  ShoppingCart, 
-  Person, 
-  Search,
   ExitToApp
 } from '@mui/icons-material';
 import { useAuth } from '../contexts/AuthContext';

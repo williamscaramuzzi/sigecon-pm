@@ -16,7 +16,6 @@ import {
   Save as SaveIcon,
   Clear as ClearIcon 
 } from '@mui/icons-material';
-import { useAuth } from '../contexts/AuthContext';
 import { doc, setDoc } from 'firebase/firestore';
 import { db} from '../config/firebase';
 
@@ -30,8 +29,6 @@ interface ProcessoCompra {
 }
 
 const CadastrarProcesso: React.FC = () => {
-  const { currentUser } = useAuth();
-  
   // Estados para os campos do formulário
   const [nup, setNup] = useState('');
   const [fonte_recebimento, setFonteRecebimento] = useState('');

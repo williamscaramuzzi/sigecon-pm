@@ -12,10 +12,8 @@ import {
 } from '@mui/material';
 import { 
   Dashboard as DashboardIcon,
-  ShoppingCart as ShoppingCartIcon,
   AddCircleOutline as AddIcon,
   Search as SearchIcon,
-  ListAlt as ListIcon, 
   Settings as SettingsIcon
 } from '@mui/icons-material';
 import { useAuth } from '../contexts/AuthContext';
