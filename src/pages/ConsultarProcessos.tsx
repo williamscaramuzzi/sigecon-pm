@@ -193,7 +193,7 @@ const navigate = useNavigate();
   const formatarData = (data: string) => {
     if (!data) return '';
     try {
-      const date = new Date(data);
+      const date = new Date(data.replace(/-/g, '\/').replace(/T.+/, ''));
       return new Intl.DateTimeFormat('pt-BR').format(date);
     } catch (e) {
       return data;
@@ -215,6 +215,8 @@ function decidirCor(data: string): string {
   return 'green';
 }
 
+
+TODO: PROCESSO NVO NÃO APARECE, SÓ QUANDO ORGANIZA POR ORDEM ALFABETICA
 
 
   return (

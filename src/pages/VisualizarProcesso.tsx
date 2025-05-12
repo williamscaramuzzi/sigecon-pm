@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useLocation} from 'react-router-dom';
 import {
   Box,
   Typography,
@@ -26,10 +26,13 @@ import {
 import {
   Edit as EditIcon,
   Save as SaveIcon,
+  Delete as DeleteIcon,
+  Archive as ArchiveIcon,
   Cancel as CancelIcon,
-  ArrowBack as ArrowBackIcon
+  ArrowBack as ArrowBackIcon,
+  Title
 } from '@mui/icons-material';
-import { doc, getDoc, updateDoc, collection, query, where, getDocs } from 'firebase/firestore';
+import { doc, getDoc, updateDoc, collection, query, where, getDocs, deleteDoc, setDoc } from 'firebase/firestore';
 import { db } from '../config/firebase';
 import { useAuth } from '../contexts/AuthContext';
 
@@ -49,20 +52,17 @@ interface ProcessoCompra {
 // Interface para as etapas do processo
 interface EtapaProcesso {
   id?: string;
-  nup: string;
+  nup?: string;
   data: string;
   status: string;
+  local: string;
 }
 
 const VisualizarProcesso: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { currentUser } = useAuth();
-  
-  // Simulação do perfil de usuário - Em produção, isso viria do contexto de autenticação
-  // Altere para 'gerente' ou 'usuario' para testar diferentes comportamentos
-  const [userProfile, setUserProfile] = useState<'gerente' | 'usuario'>('usuario');
-  
+  const location = useLocation()
+  const { userRole } = useAuth();  
   // Estados para os dados do processo
   const [processo, setProcesso] = useState<ProcessoCompra | null>(null);
   const [etapas, setEtapas] = useState<EtapaProcesso[]>([]);
@@ -71,6 +71,13 @@ const VisualizarProcesso: React.FC = () => {
   const [editValues, setEditValues] = useState<ProcessoCompra | null>(null);
   const [saveLoading, setSaveLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
+  const [showAddEtapa, setShowAddEtapa] = useState(false);
+  const [novaEtapa, setNovaEtapa] = useState<Omit<EtapaProcesso, 'id'>>({
+    nup: processo?.nup,
+    data: new Date().toISOString().slice(0,10),
+    status: '',
+    local: ''
+  });
   
   // Buscar dados do processo
   const fetchProcessoData = async () => {
@@ -104,6 +111,12 @@ const VisualizarProcesso: React.FC = () => {
         );
         
         setEtapas(sortedEtapas);
+        setNovaEtapa(prev =>{
+          return {
+            ...prev, 
+            nup: processoData.nup
+          }
+        })
       } else {
         setError("Processo não encontrado");
       }
@@ -118,9 +131,6 @@ const VisualizarProcesso: React.FC = () => {
   // Carregar dados quando o componente montar
   useEffect(() => {
     fetchProcessoData();
-    
-    // Em um caso real, você buscaria o perfil do usuário do seu contexto de autenticação
-    // Por exemplo: setUserProfile(userContext.profile);
   }, [id]);
   
   // Iniciar edição de um campo
@@ -174,12 +184,13 @@ const VisualizarProcesso: React.FC = () => {
       setSaveLoading(false);
     }
   };
-  
+  todo: ao cadastrar etapa, atualizar processo?.data_etapa_mais_recente
+  TODO: editar etapa
   // Formatar data
   const formatarData = (data: string) => {
     if (!data) return '';
     try {
-      const date = new Date(data);
+      const date = new Date(data.replace(/-/g, '\/').replace(/T.+/, ''));
       return new Intl.DateTimeFormat('pt-BR').format(date);
     } catch (e) {
       return data;
@@ -235,8 +246,8 @@ const VisualizarProcesso: React.FC = () => {
                 type={type}
                 value={editValues?.[field] || ''}
                 onChange={(e) => handleChangeField(field, type === 'number' ? Number(e.target.value) : e.target.value)}
-                InputProps={{
-                  startAdornment: field === 'valor' ? <Box component="span" sx={{ mr: 1 }}>R$</Box> : undefined,
+                slotProps={ {
+                  input: field === 'valor' ? <Box component="span" sx={{ mr: 1 }}>R$</Box> : undefined,
                 }}
               />
               <Box sx={{ ml: 1 }}>
@@ -262,7 +273,7 @@ const VisualizarProcesso: React.FC = () => {
                 p: 1, 
                 borderRadius: 1,
                 position: 'relative',
-                '&:hover': userProfile === 'gerente' ? {
+                '&:hover': userRole === 'gerente' ? {
                   bgcolor: 'action.hover',
                   '& .edit-icon': {
                     opacity: 1
@@ -284,7 +295,7 @@ const VisualizarProcesso: React.FC = () => {
                 </Typography>
               )}
               
-              {userProfile === 'gerente' && (
+              {userRole === 'gerente' && (
                 <IconButton
                   className="edit-icon"
                   size="small"
@@ -308,21 +319,46 @@ const VisualizarProcesso: React.FC = () => {
     );
   };
   
-  function decidirCor(data: string): string {
-  const dataInformada = new Date(data);
-  const hoje = new Date();
+  async function handleExcluirProcesso(e: any){    
+    if (!processo || !editValues || !processo.id) return;
+      if(confirm("Tem certeza que deseja deletar o processo?")){      
+      setSaveLoading(true);
+      try {
+        const processoRef = doc(db, "processos", processo.id);
+        
+        // Apenas atualizar o campo específico
+        await deleteDoc(processoRef)
+        
+        navigate("/consultar_processos")
+      } catch (error) {
+        console.error(`Erro ao deletar processo`)
+      } finally {
+        setSaveLoading(false);
+      }
+    }
+    
+  }
 
-  // Zera a hora para comparar só as datas (sem horas)
-  dataInformada.setHours(0, 0, 0, 0);
-  hoje.setHours(0, 0, 0, 0);
+  function handleArquivarProcesso(e: any){
+    alert("não implementado ainda")
+  }
 
-  const diffMs = hoje.getTime() - dataInformada.getTime();
-  const diffDias = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+  const handleNovaEtapaChange = (field: keyof Omit<EtapaProcesso, 'id'>, value: string) => {
+    setNovaEtapa(prev => ({
+      ...prev,
+      [field]: value
+    }));
+  };
 
-  if (diffDias > 30) return 'red';
-  if (diffDias > 15) return 'orange';
-  return 'green';
-}
+
+  async function adicionarEtapa(etapa: EtapaProcesso) {
+      // Crie um ID único para o documento conforme chave cadastrada no firebase: nup_data. Exemplo: 31.000.000-2025_2025-12-31 . Repare que a data é formato ISO para facilitar ordenação.
+      const docId = `${etapa.nup}_${etapa.data}`; 
+      //padrao do doc é banco de dados, tabela, e indice unico
+      const novoDoc = doc(db, "etapas", docId)
+      await setDoc(novoDoc, etapa)
+    }
+
 
   if (loading) {
     return (
@@ -368,7 +404,7 @@ const VisualizarProcesso: React.FC = () => {
       <Card elevation={2} sx={{ mb: 3 }}>
         <CardHeader 
           title={`Processo: ${processo.nup}`} 
-          titleTypographyProps={{ variant: 'h6' }}
+          slotProps={{title: { variant: 'h6' }}}
           subheader={processo.status && (
             <Chip 
               label={processo.status} 
@@ -376,6 +412,7 @@ const VisualizarProcesso: React.FC = () => {
               color={getStatusColor(processo.data_etapa_mais_recente) as any}
               sx={{ mt: 1 }}
             />
+            
           )}
           action={
             processo.data_etapa_mais_recente && (
@@ -384,16 +421,38 @@ const VisualizarProcesso: React.FC = () => {
               </Typography>
             )
           }
+
         />
+        
         <Divider />
         <CardContent>
           <Grid container spacing={2}>
-            {renderField("NUP", "nup", processo.nup)}
+            {<Grid size={{ xs: 12, md: 6 }} sx={{ py: 1 }}>
+                    <Box sx={{ position: 'relative' }}>
+                      <Typography variant="subtitle2" color="text.secondary">
+                        {"NUP"}
+                      </Typography>
+                      <Typography variant="h6" sx={{ fontWeight: 'bold'}}>
+                              {processo.nup}
+                      </Typography>
+                    </Box>
+            </Grid>}
             {renderField("Fonte de Recebimento", "fonte_recebimento", processo.fonte_recebimento)}
             {renderField("UOPM Beneficiada", "uopm_beneficiada", processo.uopm_beneficiada)}
             {renderField("Valor", "valor", processo.valor, "number")}
             {renderField("Quantidade", "quantidade", processo.quantidade, "number")}
-            
+            {userRole==="gerente"?(
+              <Grid>
+                <Button variant="outlined" color="error" onClick={(e)=>{handleExcluirProcesso(e)}}>
+                Excluir processo
+                <DeleteIcon/>
+              </Button>
+              <Button variant="text" color="secondary" onClick={(e)=>{handleArquivarProcesso(e)}}>
+                Arquivar processo
+                <ArchiveIcon/>
+              </Button>
+              </Grid>              
+            ):(<></>)}
             <Grid size={{ xs: 12}}>
               {renderField("Objeto", "objeto", processo.objeto)}
             </Grid>
@@ -405,7 +464,90 @@ const VisualizarProcesso: React.FC = () => {
       <Card elevation={2}>
         <CardHeader 
           title="Etapas do Processo" 
-          titleTypographyProps={{ variant: 'h6' }}
+          slotProps={{ title: {variant: 'h6'} }}
+          subheader={userRole === 'gerente' ? (
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+              {!showAddEtapa ? (
+                <Typography 
+                  sx={{ 
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    cursor: 'pointer', 
+                    '&:hover': { color: 'primary.main' } 
+                  }}
+                  onClick={() => setShowAddEtapa(true)}
+                >
+                  Adicionar Etapa
+                  <EditIcon sx={{ ml: 1, fontSize: 'small' }} />
+                </Typography>
+              ) : (
+                <Box sx={{ width: '100%' }}>
+                  <Grid container spacing={2}>
+                    <Grid size={{ xs: 12, md: 4 }} >
+                      <TextField
+                        fullWidth
+                        label="Data"
+                        type="date"
+                        value={novaEtapa.data}
+                        onChange={(e) => handleNovaEtapaChange('data', e.target.value)}
+                        />
+                    </Grid>
+                    <Grid size={{ xs: 12, md: 4 }} >
+                      <TextField
+                        fullWidth
+                        label="Local"
+                        value={novaEtapa.local}
+                        onChange={(e) => handleNovaEtapaChange('local', e.target.value)}
+                      />
+                    </Grid>
+                    <Grid size={{ xs: 12, md: 4 }} >
+                      <TextField
+                        fullWidth
+                        label="Status"
+                        value={novaEtapa.status}
+                        onChange={(e) => handleNovaEtapaChange('status', e.target.value)}
+                      />
+                    </Grid>
+                    <Grid size={{ xs: 12, md: 4 }} sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                      <IconButton 
+                        color="primary" 
+                        onClick={async () => {
+                          await adicionarEtapa(novaEtapa)
+                          await fetchProcessoData()
+                          //reseta fields e deixa nova etapa em seu estágio inicial:
+                          setShowAddEtapa(false);    
+                          setNovaEtapa({
+                            nup: processo!.nup,
+                            data: new Date().toISOString().slice(0,10),
+                            status: '',
+                            local: ''
+                          });                      
+                        }}
+                      >
+                        <SaveIcon />
+                      </IconButton>
+                      {/* ícone cancelar abaixo, show add etapa fica false e zera a variável nova etapa */}
+                      <IconButton 
+                        color="secondary" 
+                        onClick={() => {
+                          setShowAddEtapa(false);
+                          // Reset the new stage fields
+                          setNovaEtapa({
+                            nup: processo!.nup,
+                            data: new Date().toISOString().slice(0,10),
+                            status: '',
+                            local: ''
+                          });
+                        }}
+                      >
+                        <CancelIcon />
+                      </IconButton>
+                    </Grid>
+                  </Grid>
+                </Box>
+              )}
+            </Box>
+          ) : null}
         />
         <Divider />
         <CardContent>
@@ -414,6 +556,7 @@ const VisualizarProcesso: React.FC = () => {
               <TableHead>
                 <TableRow>
                   <TableCell>Data</TableCell>
+                  <TableCell>Local</TableCell>
                   <TableCell>Status</TableCell>
                 </TableRow>
               </TableHead>
@@ -422,6 +565,7 @@ const VisualizarProcesso: React.FC = () => {
                   etapas.map((etapa) => (
                     <TableRow key={etapa.id}>
                       <TableCell>{formatarData(etapa.data)}</TableCell>
+                      <TableCell>{etapa.local}</TableCell>
                       <TableCell>
                         <Chip 
                           label={etapa.status} 

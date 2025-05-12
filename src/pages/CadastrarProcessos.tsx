@@ -25,7 +25,8 @@ interface ProcessoCompra {
   objeto: string,
   quantidade: number,
   uopm_beneficiada: string,
-  valor: number
+  valor: number, 
+  data_etapa_mais_recente: string
 }
 
 const CadastrarProcesso: React.FC = () => {
@@ -74,7 +75,8 @@ const CadastrarProcesso: React.FC = () => {
         objeto,
         quantidade: Number(quantidade),
         uopm_beneficiada,
-        valor: Number(valor)
+        valor: Number(valor),
+        data_etapa_mais_recente: new Date().toISOString().slice(0,10)
       }
       //padrao do doc é banco de dados, tabela, e indice unico
       const novoDoc = doc(db, "processos", nup)
