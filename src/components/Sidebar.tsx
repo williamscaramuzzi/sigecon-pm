@@ -61,7 +61,7 @@ const Sidebar: React.FC<SidebarProps> = ({ open, onClose }) => {
           sx={{ height: 60, mb: 1 }}
         />
         <Typography variant="subtitle1" fontWeight="bold">
-          SIGECOM-PM
+          SIGECON-PM
         </Typography>
       </Box>
       

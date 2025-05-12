@@ -101,7 +101,7 @@ const CadastrarProcesso: React.FC = () => {
       </Typography>
       
       <Typography variant="subtitle1" gutterBottom color="text.secondary">
-        Preencha o formulário para cadastrar um novo processo no SIGECOM-PM
+        Preencha o formulário para cadastrar um novo processo no SIGECON-PM
       </Typography>
       
       <Card elevation={2} sx={{ mt: 3 }}>

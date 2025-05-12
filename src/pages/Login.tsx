@@ -67,10 +67,10 @@ const Login: React.FC = () => {
             sx={{ height: 80, mb: 2 }}
           />
           <Typography component="h1" variant="h5" gutterBottom>
-            SIGECOM-PM
+            SIGECON-PM
           </Typography>
           <Typography variant="subtitle1" color="text.secondary" align="center" gutterBottom>
-            Sistema de Gerenciamento de Compras da Polícia Militar
+            Sistema de Gerenciamento de Contratações da Polícia Militar
           </Typography>
 
           {error && (
@@ -117,7 +117,7 @@ const Login: React.FC = () => {
       </Box>
       <Box mt={4}>
         <Typography variant="body2" color="text.secondary" align="center">
-          © {new Date().getFullYear()} SIGECOM-PM. Todos os direitos reservados.
+          © {new Date().getFullYear()} SIGECON-PM. Todos os direitos reservados.
         </Typography>
       </Box>
     </Container>

@@ -58,7 +58,7 @@ const Navbar: React.FC<NavbarProps> = ({ onMenuToggle }) => {
         </IconButton>
         
         <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
-          SIGECOM-PM
+          SIGECON-PM
         </Typography>
         
         <Box>

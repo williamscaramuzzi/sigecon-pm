@@ -119,7 +119,7 @@ function decidirCor(data: string): string {
       </Typography>
       
       <Typography variant="subtitle1" gutterBottom color="text.secondary">
-        Bem-vindo(a) ao SIGECOM-PM, {currentUser?.email}
+        Bem-vindo(a) ao SIGECON-PM, {currentUser?.email}
       </Typography>
       
       <Grid container spacing={3} sx={{ mt: 1 }}>

@@ -224,7 +224,7 @@ function decidirCor(data: string): string {
       </Typography>
       
       <Typography variant="subtitle1" gutterBottom color="text.secondary">
-        Visualize e gerencie os processos cadastrados no SIGECOM-PM
+        Visualize e gerencie os processos cadastrados no SIGECON-PM
       </Typography>
       
       <Card elevation={2} sx={{ mt: 3 }}>

@@ -1,10 +1,10 @@
-# SIGECOM-PM
+# SIGECON-PM
 
 Sistema de Gerenciamento de Compras da Polícia Militar
 
 ## Sobre o Projeto
 
-O SIGECOM-PM é um sistema desenvolvido para gerenciar processos de compras da Polícia Militar, permitindo consulta, cadastro, edição e acompanhamento de processos de aquisição.
+O SIGECON-PM é um sistema desenvolvido para gerenciar processos de compras da Polícia Militar, permitindo consulta, cadastro, edição e acompanhamento de processos de aquisição.
 
 ### Funcionalidades
 
@@ -28,7 +28,7 @@ O SIGECOM-PM é um sistema desenvolvido para gerenciar processos de compras da P
 ## Estrutura do Projeto
 
 ```
-sigecom-pm/
+sigecoN-pm/
 ├── public/
 ├── src/
 │   ├── assets/        # Imagens e recursos estáticos
