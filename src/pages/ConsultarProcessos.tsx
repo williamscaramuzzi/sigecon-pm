@@ -24,6 +24,7 @@ import {
 import { collection, getDocs } from 'firebase/firestore';
 import { db } from '../config/firebase';
 import { useNavigate } from 'react-router-dom';
+import { decidirCor, formatarData } from './Helpers';
 
 // Interface para os dados do processo
 interface ProcessoCompra {
@@ -137,11 +138,28 @@ const navigate = useNavigate();
     
     return mainA.localeCompare(mainB);
     }
+
   // Função para comparar colunas ao ordenar
  function compareValues(a: ProcessoCompra, b: ProcessoCompra, orderBy: OrderBy) {
   // Tratamento especial para o campo NUP
   if (orderBy === 'nup') {
     return compareNUPs(a.nup, b.nup);
+  }
+  //lógica para ordenação por quantidade dos objetos comprados
+  if (orderBy === 'quantidade'){
+    const qntA = Number(a[orderBy])
+    const qntB = Number(b[orderBy])
+    if(qntA<qntB) return -1;
+    if(qntA>qntB) return 1;
+    if(qntA===qntB) return 0
+  }
+  //lógica de ordenação pelo valor R$
+  if (orderBy === 'valor'){
+    const qntA = a[orderBy]
+    const qntB = b[orderBy]
+    if(qntA<qntB) return -1;
+    if(qntA>qntB) return 1;
+    if(qntA===qntB) return 0
   }
   
   // Lógica existente para os outros campos
@@ -196,33 +214,7 @@ const navigate = useNavigate();
     navigate(`/processo/${id}`);
   };
 
-  // Formatar data
-  const formatarData = (data: string) => {
-    if (!data) return '';
-    try {
-      const date = new Date(data.replace(/-/g, '\/').replace(/T.+/, ''));
-      return new Intl.DateTimeFormat('pt-BR').format(date);
-    } catch (e) {
-      return data;
-    }
-  };
-function decidirCor(data: string): string {
-  const dataInformada = new Date(data);
-  const hoje = new Date();
-
-  // Zera a hora para comparar só as datas (sem horas)
-  dataInformada.setHours(0, 0, 0, 0);
-  hoje.setHours(0, 0, 0, 0);
-
-  const diffMs = hoje.getTime() - dataInformada.getTime();
-  const diffDias = Math.floor(diffMs / (1000 * 60 * 60 * 24));
-
-  if (diffDias > 30) return 'red';
-  if (diffDias > 15) return 'orange';
-  return 'green';
-}
-
-
+ 
   return (
     <Box>
       <Typography variant="h4" component="h1" gutterBottom>
