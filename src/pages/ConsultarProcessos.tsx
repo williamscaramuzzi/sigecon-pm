@@ -98,7 +98,6 @@ const navigate = useNavigate();
   };
   
   const handleChangeRowsPerPage = (event: React.ChangeEvent<HTMLInputElement>) => {
-    console.log("event target value no handleChangeRowsPerPAge: ", event.target.value)
     setRowsPerPage(parseInt(event.target.value, 10));
     setPage(0);
   };

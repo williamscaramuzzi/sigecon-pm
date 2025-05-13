@@ -183,7 +183,7 @@ const VisualizarProcesso: React.FC = () => {
       setSaveLoading(false);
     }
   };
-  // todo: ao cadastrar etapa, atualizar processo?.data_etapa_mais_recente
+
   // TODO: editar etapa
   // Formatar data
   const formatarData = (data: string) => {
@@ -368,7 +368,12 @@ const VisualizarProcesso: React.FC = () => {
       //Agora atualiza dois campos que são do PROCESSO: o status e a data da ultima etapa. Sim, atributos estão presentes em Processo e em Etapa por necessidade sempre 
       // de ter a etapa mais recente no objeto Processo
       const esseProcessoRef = doc(db, "processos", processo!.nup)
-      await updateDoc(esseProcessoRef, {status: etapa.status, data_etapa_mais_recente: etapa.data})
+      //E se o gerente estiver adicionando uma etapa anterior, mais antiga que a atual? Logo, para esse caso, temos que fazer um if
+      // para atualizar Status e Data_etapa_mais_recente somente se estas forem as mais atuais
+      if(etapa.data>processo!.data_etapa_mais_recente){
+        await updateDoc(esseProcessoRef, {status: etapa.status, data_etapa_mais_recente: etapa.data})
+      }
+      
 
     }
 
@@ -454,6 +459,8 @@ const VisualizarProcesso: React.FC = () => {
             {renderField("UOPM Beneficiada", "uopm_beneficiada", processo.uopm_beneficiada)}
             {renderField("Valor", "valor", processo.valor, "number")}
             {renderField("Quantidade", "quantidade", processo.quantidade, "number")}
+            {renderField("Objeto", "objeto", processo.objeto)}
+
             {userRole==="gerente"?(
               <Grid>
                 <Button variant="outlined" color="error" onClick={(e)=>{handleExcluirProcesso(e)}}>
@@ -466,9 +473,6 @@ const VisualizarProcesso: React.FC = () => {
               </Button>
               </Grid>              
             ):(<></>)}
-            <Grid size={{ xs: 12}}>
-              {renderField("Objeto", "objeto", processo.objeto)}
-            </Grid>
           </Grid>
         </CardContent>
       </Card>
