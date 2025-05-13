@@ -98,6 +98,7 @@ const navigate = useNavigate();
   };
   
   const handleChangeRowsPerPage = (event: React.ChangeEvent<HTMLInputElement>) => {
+    console.log("event target value no handleChangeRowsPerPAge: ", event.target.value)
     setRowsPerPage(parseInt(event.target.value, 10));
     setPage(0);
   };
@@ -148,11 +149,11 @@ const navigate = useNavigate();
   const valueA = String(a[orderBy]).toLowerCase();
   const valueB = String(b[orderBy]).toLowerCase();
   
-  if (valueB < valueA) {
-    return 1;
-  }
-  if (valueB > valueA) {
+  if (valueA < valueB) {
     return -1;
+  }
+  if (valueA > valueB) {
+    return 1;
   }
   return 0;
 }
@@ -176,8 +177,15 @@ const navigate = useNavigate();
   }
   
   // Aplicar paginação e ordenação aos dados
-  const visibleRows = stableSort(processos, getComparator(order, orderBy))
-    .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage);
+  let visibleRows: ProcessoCompra[] 
+  if(rowsPerPage>0){
+    visibleRows = stableSort(processos, getComparator(order, orderBy)).slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage);
+  }
+  else{
+    //Quando entra nesse else, é porque selecionou "todos" em "itens por página". O valor de Todos é -1, o que buga a formula do slice acima.
+    //Então se rowsperpage é igual a -1 (Todos), visibleRows é tudão mesmo
+      visibleRows = stableSort(processos, getComparator(order, orderBy))
+    }
   
   // Renderizar rótulo de "Todos" na paginação
   const getLabelDisplayedRows = ({ from, to, count }: { from: number; to: number; count: number }) => {
@@ -214,9 +222,6 @@ function decidirCor(data: string): string {
   if (diffDias > 15) return 'orange';
   return 'green';
 }
-
-
-TODO: PROCESSO NVO NÃO APARECE, SÓ QUANDO ORGANIZA POR ORDEM ALFABETICA
 
 
   return (

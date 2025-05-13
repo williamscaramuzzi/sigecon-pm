@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate, useLocation} from 'react-router-dom';
+import { useParams, useNavigate} from 'react-router-dom';
 import {
   Box,
   Typography,
@@ -61,7 +61,6 @@ interface EtapaProcesso {
 const VisualizarProcesso: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const location = useLocation()
   const { userRole } = useAuth();  
   // Estados para os dados do processo
   const [processo, setProcesso] = useState<ProcessoCompra | null>(null);
@@ -184,8 +183,8 @@ const VisualizarProcesso: React.FC = () => {
       setSaveLoading(false);
     }
   };
-  todo: ao cadastrar etapa, atualizar processo?.data_etapa_mais_recente
-  TODO: editar etapa
+  // todo: ao cadastrar etapa, atualizar processo?.data_etapa_mais_recente
+  // TODO: editar etapa
   // Formatar data
   const formatarData = (data: string) => {
     if (!data) return '';
@@ -326,8 +325,16 @@ const VisualizarProcesso: React.FC = () => {
       try {
         const processoRef = doc(db, "processos", processo.id);
         
-        // Apenas atualizar o campo específico
+        // Exclui o processo
         await deleteDoc(processoRef)
+
+        //Procura todas as etapas e exclui também
+        const etapasRef = collection(db, "etapas")
+        const q = query(etapasRef, where("nup", "==", processo.nup))
+        const listaEtapasDoProcessoExcluido = await getDocs(q)
+        listaEtapasDoProcessoExcluido.forEach(async(etapa)=>{
+          await deleteDoc(doc(db, "etapas", etapa.id))
+        })
         
         navigate("/consultar_processos")
       } catch (error) {
@@ -355,8 +362,14 @@ const VisualizarProcesso: React.FC = () => {
       // Crie um ID único para o documento conforme chave cadastrada no firebase: nup_data. Exemplo: 31.000.000-2025_2025-12-31 . Repare que a data é formato ISO para facilitar ordenação.
       const docId = `${etapa.nup}_${etapa.data}`; 
       //padrao do doc é banco de dados, tabela, e indice unico
-      const novoDoc = doc(db, "etapas", docId)
-      await setDoc(novoDoc, etapa)
+      const novaEtapaRef = doc(db, "etapas", docId)
+      await setDoc(novaEtapaRef, etapa)
+
+      //Agora atualiza dois campos que são do PROCESSO: o status e a data da ultima etapa. Sim, atributos estão presentes em Processo e em Etapa por necessidade sempre 
+      // de ter a etapa mais recente no objeto Processo
+      const esseProcessoRef = doc(db, "processos", processo!.nup)
+      await updateDoc(esseProcessoRef, {status: etapa.status, data_etapa_mais_recente: etapa.data})
+
     }
 
 
