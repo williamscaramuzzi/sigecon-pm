@@ -11,7 +11,8 @@ import {
   Divider,
   Alert,
   Snackbar,
-  IconButton
+  IconButton,
+  Autocomplete
 } from '@mui/material';
 import { 
   Save as SaveIcon,
@@ -20,6 +21,7 @@ import {
 import { doc, setDoc } from 'firebase/firestore';
 import { db} from '../config/firebase';
 import { formatarMoeda } from './Helpers';
+import { listalocais } from './listalocais';
 
 interface ProcessoCompra {
   nup: string,
@@ -234,14 +236,19 @@ const CadastrarProcesso: React.FC = () => {
                       />
                   </Grid>
                   <Grid size={{ xs: 12, md: 4 }} >
-                    <TextField
-                      fullWidth
-                      label="Local"
-                      value={local}
-                      onChange={(e)=>{
-                        setLocal(e.target.value)
-                      }}
-                    />
+                    <Autocomplete
+                        fullWidth
+                        options={listalocais}
+                        value={local}
+                        onChange={(event: any, newValue: any) => {
+                          setLocal(newValue);
+                        }}
+                        disableClearable
+                        freeSolo={false}
+                        renderInput={(params) => (
+                          <TextField {...params} label="Local" />
+                        )}
+                      />
                   </Grid>
                   <Grid size={{ xs: 12, md: 4 }} >
                     <TextField

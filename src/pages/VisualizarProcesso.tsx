@@ -22,7 +22,8 @@ import {
   Chip,
   CircularProgress,
   Alert,
-  Input
+  Input,
+  Autocomplete
 } from '@mui/material';
 import {
   Edit as EditIcon,
@@ -37,6 +38,7 @@ import { doc, getDoc, updateDoc, collection, query, where, getDocs, deleteDoc, s
 import { db } from '../config/firebase';
 import { useAuth } from '../contexts/AuthContext';
 import { decidirCor, formatarValor, formatarData } from './Helpers';
+import { listalocais } from './listalocais';
 
 // Interface para os dados do processo
 interface ProcessoCompra {
@@ -387,12 +389,19 @@ const VisualizarProcesso: React.FC = () => {
                   />
               </TableCell>
               <TableCell>
-                <TextField  variant="outlined" 
-                  value={currentEditingEtapa.local}
-                  onChange={(e)=>{
-                    setCurrentEditingEtapa(prev => ({...prev, local: e.target.value}))
-                  }}
-                />
+                <Autocomplete
+                    fullWidth
+                    options={listalocais}
+                    value={currentEditingEtapa.local}
+                    onChange={(event, newValue)=>{
+                      setCurrentEditingEtapa(prev => ({...prev, local: newValue}))
+                    }}
+                    disableClearable
+                    freeSolo={false}
+                    renderInput={(params) => (
+                      <TextField {...params} label="Local" />
+                    )}
+                  />
               </TableCell>
               <TableCell>
                 <TextField variant="outlined" 
@@ -608,11 +617,18 @@ const VisualizarProcesso: React.FC = () => {
                       />
                     </Grid>
                     <Grid size={{ xs: 12, md: 4 }} >
-                      <TextField
+                      <Autocomplete
                         fullWidth
-                        label="Local"
+                        options={listalocais}
                         value={novaEtapa.local}
-                        onChange={(e) => handleNovaEtapaChange('local', e.target.value)}
+                        onChange={(event, newValue)=>{
+                          handleNovaEtapaChange('local', newValue)
+                        }}
+                        disableClearable
+                        freeSolo={false}
+                        renderInput={(params) => (
+                          <TextField {...params} label="Local" />
+                        )}
                       />
                     </Grid>
                     <Grid size={{ xs: 12, md: 4 }} >
