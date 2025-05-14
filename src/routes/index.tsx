@@ -7,6 +7,8 @@ import { useAuth } from '../contexts/AuthContext';
 import CadastrarProcesso from '../pages/CadastrarProcessos';
 import ConsultarProcessos from '../pages/ConsultarProcessos';
 import VisualizarProcesso from '../pages/VisualizarProcesso';
+import CadastrarContratosEmpenhados from '../pages/CadastrarContratosEmpenhados';
+import ConsultarContratosEmpenhados from '../pages/ConsultarContratosEmpenhados';
 
 
 // Rotas protegidas que requerem autenticação
@@ -57,6 +59,14 @@ const AppRoutes: React.FC = () => {
         {
           path: 'cadastrar_processos',
           element: <CadastrarProcesso />,
+        },
+        {
+          path: 'cadastrar_contratos_empenhados',
+          element: <CadastrarContratosEmpenhados />,
+        },
+        {
+          path: 'consultar_contratos_empenhados',
+          element: <ConsultarContratosEmpenhados />,
         },
         {
           path: 'consultar_processos',

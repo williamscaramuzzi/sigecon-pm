@@ -36,3 +36,25 @@ export const formatarData = (data: string) => {
       currency: 'BRL'
     }).format(valor);
   };
+
+  // Função para formatar o valor como moeda brasileira
+  export const formatarMoeda = (value: string) => {
+    // Remover caracteres não numéricos
+    const valor = value.replace(/\D/g, '');
+
+    // Substituir vírgula por ponto
+    const valorFormatado = valor.replace(',', '.');
+    
+    // Converte para número e divide por 100 para considerar os centavos
+    const valorNumerico = parseFloat(valorFormatado) / 100;
+    
+    // Formata o número como moeda brasileira
+    if (!isNaN(valorNumerico)) {
+      return valorNumerico.toLocaleString('pt-BR', {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+      });
+    }
+    
+    return '';
+  };

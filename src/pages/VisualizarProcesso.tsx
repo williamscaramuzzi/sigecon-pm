@@ -138,7 +138,6 @@ const VisualizarProcesso: React.FC = () => {
 
   // Carregar dados quando o componente montar
   useEffect(() => {
-    console.log("entrou no useeffect")
     fetchProcessoData();
     //O código abaixo fica escutando a variável idEtapaEditando. Se existe uma etapa sendo editada atualmente, trigga o useeffect.
     //E aí o useEffect seta a currentEditingEtapa como etapa

@@ -11,6 +11,8 @@ import {
   Typography
 } from '@mui/material';
 import { 
+  FindInPage as FindInPageIcon,
+  PostAdd as PostAddIcon,
   Dashboard as DashboardIcon,
   AddCircleOutline as AddIcon,
   Search as SearchIcon,
@@ -79,8 +81,15 @@ const Sidebar: React.FC<SidebarProps> = ({ open, onClose }) => {
           <ListItemIcon>
             <SearchIcon />
           </ListItemIcon>
-          <ListItemText primary="Consultar" />
+          <ListItemText primary="Consultar Processos" />
         </ListItemButton>
+
+        <ListItemButton onClick={() => navigateTo('/consultar_contratos_empenhados')}>
+              <ListItemIcon>
+                <FindInPageIcon/>
+              </ListItemIcon>
+              <ListItemText primary="Consultar Contratos Empenhados" />
+            </ListItemButton>
         
         {isGerente() && (
           <>
@@ -92,12 +101,14 @@ const Sidebar: React.FC<SidebarProps> = ({ open, onClose }) => {
               <ListItemText primary="Novo Processo" />
             </ListItemButton>
             
-            <ListItemButton onClick={() => navigateTo('/configuracoes')}>
+            <ListItemButton onClick={() => navigateTo('/cadastrar_contratos_empenhados')}>
               <ListItemIcon>
-                <SettingsIcon />
+                <PostAddIcon/>
               </ListItemIcon>
-              <ListItemText primary="Configurações" />
+              <ListItemText primary="Cadastrar Contratos Empenhados" />
             </ListItemButton>
+
+            
           </>
         )}
       </List>

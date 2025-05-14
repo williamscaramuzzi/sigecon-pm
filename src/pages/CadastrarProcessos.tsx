@@ -19,6 +19,7 @@ import {
 } from '@mui/icons-material';
 import { doc, setDoc } from 'firebase/firestore';
 import { db} from '../config/firebase';
+import { formatarMoeda } from './Helpers';
 
 interface ProcessoCompra {
   nup: string,
@@ -91,7 +92,7 @@ const CadastrarProcesso: React.FC = () => {
         objeto,
         quantidade: Number(quantidade),
         uopm_beneficiada,
-        valor: Number(valor),
+        valor: Number(valor.replace(/\./g, '').replace(',', '.')),
         data_etapa_mais_recente: dataEtapa,
         status
       }
@@ -208,12 +209,12 @@ const CadastrarProcesso: React.FC = () => {
                   required
                   label="Valor (R$)"
                   value={valor}
-                  onChange={(e) => setValor(e.target.value)}
-                  placeholder="Ex: 10000.00"
-                  variant="outlined"
-                  InputProps={{
-                    startAdornment: <Box component="span" sx={{ mr: 1 }}>R$</Box>,
+                  onChange={(e)=>{
+                    setValor(formatarMoeda(e.target.value));
                   }}
+                  placeholder="Ex: 10.000,00"
+                  variant="outlined"
+                  
                 />
               </Grid>
               <Box sx={{ width: '100%' }}>
