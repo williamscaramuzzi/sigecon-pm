@@ -10,6 +10,8 @@ import VisualizarProcesso from '../pages/VisualizarProcesso';
 import CadastrarContratosEmpenhados from '../pages/CadastrarContratosEmpenhados';
 import ConsultarContratosEmpenhados from '../pages/ConsultarContratosEmpenhados';
 import Desenvolvimento from '../pages/Desenvolvimento';
+import NovoUsuario from '../pages/NovoUsuario';
+import ResetarSenha from '../pages/ResetarSenha';
 
 
 // Rotas protegidas que requerem autenticação
@@ -44,6 +46,14 @@ const AppRoutes: React.FC = () => {
     {
       path: '/login',
       element: <Login />
+    },
+    {
+      path: '/novo_usuario',
+      element: <NovoUsuario />
+    },
+    {
+      path: '/resetar_senha',
+      element: <ResetarSenha />
     },
     {
       path: '/',

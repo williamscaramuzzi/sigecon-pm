@@ -1,17 +1,18 @@
 // src/pages/Login.tsx
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { 
-  Container, 
-  Box, 
-  Typography, 
-  TextField, 
-  Button, 
-  Paper, 
+import {
+  Container,
+  Box,
+  Typography,
+  TextField,
+  Button,
+  Paper,
   Alert
 } from '@mui/material';
 import { useAuth } from '../contexts/AuthContext';
 import policiaLogo from '../assets/logopmms.svg'; // Crie este ativo ou substitua com o logo correto
+import { getAuth, sendPasswordResetEmail } from 'firebase/auth';
 
 const Login: React.FC = () => {
   const [email, setEmail] = useState('');
@@ -60,7 +61,7 @@ const Login: React.FC = () => {
             width: '100%',
           }}
         >
-          <Box 
+          <Box
             component="img"
             src={policiaLogo}
             alt="Polícia Militar"
@@ -113,6 +114,47 @@ const Login: React.FC = () => {
               Entrar
             </Button>
           </Box>
+        </Paper>
+      </Box>
+      <Box sx={{
+        marginTop: 8,
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+      }}>
+        <Paper
+          elevation={3}
+          sx={{
+            padding: 1,
+            display: 'flex',
+            flexDirection: 'row',
+            justifyContent: "space-around",
+            alignItems: 'center',
+            width: '100%',
+          }}
+        >
+          <Button
+            onClick={async () => {
+              navigate("/resetar_senha")
+            }}
+            size='small'
+            variant="text"
+            sx={{ mt: 1, mb: 1 }}
+          >
+            Esqueci minha senha
+          </Button>
+          <Button
+            onClick={() => {
+              navigate("/novo_usuario")
+            }}
+            size='small'
+            variant="contained"
+            sx={{ mt: 1, mb: 1, backgroundColor: '#3c4a5d' }}
+          >
+            Cadastrar
+          </Button>
+
+
         </Paper>
       </Box>
       <Box mt={4}>
