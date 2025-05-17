@@ -37,30 +37,11 @@ import {
 import { doc, getDoc, updateDoc, collection, query, where, getDocs, deleteDoc, setDoc } from 'firebase/firestore';
 import { db } from '../config/firebase';
 import { useAuth } from '../contexts/AuthContext';
-import { decidirCor, formatarValor, formatarData } from './Helpers';
+import { decidirCor, formatarValor, formatarData, diferencaEmDias, decidirCorChip } from './Helpers';
 import { listalocais } from './listalocais';
+import type { ProcessoCompra } from '../models/ProcessoCompra';
+import type { EtapaProcesso } from '../models/EtapaProcesso';
 
-// Interface para os dados do processo
-interface ProcessoCompra {
-  id?: string;
-  nup: string;
-  fonte_recebimento: string;
-  objeto: string;
-  quantidade: number;
-  uopm_beneficiada: string;
-  valor: number;
-  data_etapa_mais_recente: string;
-  status: string;
-}
-
-// Interface para as etapas do processo
-interface EtapaProcesso {
-  id?: string;
-  nup?: string;
-  data: string;
-  status: string;
-  local: string;
-}
 
 const VisualizarProcesso: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -99,7 +80,7 @@ const VisualizarProcesso: React.FC = () => {
       const processoDoc = await getDoc(doc(db, "processos", id));
 
       if (processoDoc.exists()) {
-        const processoData = { id: processoDoc.id, ...processoDoc.data() } as ProcessoCompra;
+        const processoData = { ...processoDoc.data() } as ProcessoCompra;
         setProcesso(processoData);
         setEditValues(processoData);
 
@@ -184,11 +165,12 @@ const VisualizarProcesso: React.FC = () => {
 
   // Salvar campo editado
   const handleSaveField = async (field: keyof ProcessoCompra) => {
-    if (!processo || !editValues || !processo.id) return;
+    if (!processo || !editValues || !processo.nup) return;
 
     setSaveLoading(true);
     try {
-      const processoRef = doc(db, "processos", processo.id);
+      //o id é o nup
+      const processoRef = doc(db, "processos", processo.nup);
 
       // Apenas atualizar o campo específico
       await updateDoc(processoRef, {
@@ -309,11 +291,12 @@ const VisualizarProcesso: React.FC = () => {
   };
 
   async function handleExcluirProcesso(e: any) {
-    if (!processo || !editValues || !processo.id) return;
+    if (!processo || !editValues || !processo.nup) return;
     if (confirm("Tem certeza que deseja deletar o processo?")) {
       setSaveLoading(true);
       try {
-        const processoRef = doc(db, "processos", processo.id);
+        //o id é o nup
+        const processoRef = doc(db, "processos", processo.nup);
 
         // Exclui o processo
         await deleteDoc(processoRef)
@@ -371,6 +354,7 @@ const VisualizarProcesso: React.FC = () => {
     await adicionarEtapa(currentEditingEtapa)
   }
 
+  
   function renderEtapasRows(etapas: EtapaProcesso[], label: string, field: keyof ProcessoCompra, value: any, type: 'text' | 'number' = 'text') {
     return (
       etapas.map(etapa => {
@@ -448,11 +432,7 @@ const VisualizarProcesso: React.FC = () => {
               <TableCell>{formatarData(etapa.data)}</TableCell>
               <TableCell>{etapa.local}</TableCell>
               <TableCell>
-                <Chip
-                  label={etapa.status}
-                  size="small"
-                  color={"default"}
-                />
+                {etapa.status}
                 {userRole === 'gerente' && (
                   <IconButton
                     className="edit-icon"
@@ -534,16 +514,24 @@ const VisualizarProcesso: React.FC = () => {
             <Chip
               label={processo.status}
               size="small"
-              color={decidirCor(processo.data_etapa_mais_recente) as any}
+              color={decidirCorChip(processo.data_etapa_mais_recente) as any}
               sx={{ mt: 1 }}
             />
 
           )}
           action={
             processo.data_etapa_mais_recente && (
-              <Typography variant="body2" color="text.secondary" sx={{ mr: 2 }}>
-                Última atualização: {formatarData(processo.data_etapa_mais_recente)}
-              </Typography>
+              <Grid size={{ xs: 12, md: 6 }} sx={{ py: 1 }}>
+                <Typography variant="body2" color="text.secondary" sx={{ mr: 2 }}>
+                  Data primeira etapa: {formatarData(processo.data_primeira_etapa)}
+                </Typography>
+                <Typography variant="body2" color="text.secondary" sx={{ mr: 2 }}>
+                  Última atualização: {formatarData(processo.data_etapa_mais_recente)}
+                </Typography>
+                <Typography variant="body2" color="text.secondary" sx={{ mr: 2 }}>
+                  Tempo decorrido: {diferencaEmDias(processo.data_primeira_etapa, processo.data_etapa_mais_recente)} dias
+                </Typography>
+              </Grid>
             )
           }
 

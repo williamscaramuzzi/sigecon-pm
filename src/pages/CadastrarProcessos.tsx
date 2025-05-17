@@ -22,25 +22,7 @@ import { doc, setDoc } from 'firebase/firestore';
 import { db} from '../config/firebase';
 import { formatarMoeda } from './Helpers';
 import { listalocais } from './listalocais';
-
-interface ProcessoCompra {
-  nup: string,
-  fonte_recebimento: string,
-  objeto: string,
-  quantidade: number,
-  uopm_beneficiada: string,
-  valor: number, 
-  data_etapa_mais_recente: string,
-  status: string
-}
-// Interface para as etapas do processo
-interface EtapaProcesso {
-  id?: string;
-  nup?: string;
-  data: string;
-  status: string;
-  local: string;
-}
+import type { ProcessoCompra } from '../models/ProcessoCompra';
 
 const CadastrarProcesso: React.FC = () => {
   // Estados para os campos do formulário
@@ -96,6 +78,7 @@ const CadastrarProcesso: React.FC = () => {
         uopm_beneficiada,
         valor: Number(valor.replace(/\./g, '').replace(',', '.')),
         data_etapa_mais_recente: dataEtapa,
+        data_primeira_etapa: dataEtapa,
         status
       }
       //padrao do doc é banco de dados, tabela, e indice unico

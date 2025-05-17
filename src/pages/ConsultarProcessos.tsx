@@ -25,19 +25,7 @@ import { collection, getDocs } from 'firebase/firestore';
 import { db } from '../config/firebase';
 import { useNavigate } from 'react-router-dom';
 import { decidirCor, formatarData } from './Helpers';
-
-// Interface para os dados do processo
-interface ProcessoCompra {
-  id?: string;
-  nup: string;
-  fonte_recebimento: string;
-  objeto: string;
-  quantidade: number;
-  uopm_beneficiada: string;
-  valor: number;
-  data_etapa_mais_recente: string,
-  status: string
-}
+import type { ProcessoCompra } from '../models/ProcessoCompra';
 
 // Tipo para a direção da ordenação
 type Order = 'asc' | 'desc';
@@ -321,7 +309,7 @@ const navigate = useNavigate();
                     {visibleRows.length > 0 ? (
                       visibleRows.map((processo) => (
                         <TableRow
-                            key={processo.id || processo.nup}
+                            key={processo.nup}
                             hover
                             sx={{
                                 '&:last-child td, &:last-child th': { border: 0 },
@@ -335,7 +323,7 @@ const navigate = useNavigate();
                             <Tooltip title="Ver detalhes">
                               <IconButton 
                                 size="small" 
-                                onClick={() => handleVerProcesso(processo.id || processo.nup)}
+                                onClick={() => handleVerProcesso(processo.nup)}
                                 color="primary"
                               >
                                 <VisibilityIcon fontSize="small" />

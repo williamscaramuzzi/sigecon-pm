@@ -2,20 +2,39 @@
  * Arquivo Helpers.ts para concentrar todas as funções que se repetem ao longo do código
  * 
  */
+
+export function diferencaEmDias(primeira_data: string, segunda_data: string): number {
+    const data1 = new Date(primeira_data);
+    const data2 = new Date(segunda_data);
+  
+    // Zera as horas para considerar apenas a diferença de dias
+    data1.setHours(0, 0, 0, 0);
+    data2.setHours(0, 0, 0, 0);
+  
+    const diffEmMs = Math.abs(data2.getTime() - data1.getTime());
+    const diffEmDias = Math.floor(diffEmMs / (1000 * 60 * 60 * 24));
+  
+    return diffEmDias
+  }
+
 export function decidirCor(data: string): string {
   const dataInformada = new Date(data);
   const hoje = new Date();
-
-  // Zera a hora para comparar só as datas (sem horas)
-  dataInformada.setHours(0, 0, 0, 0);
-  hoje.setHours(0, 0, 0, 0);
-
-  const diffMs = hoje.getTime() - dataInformada.getTime();
-  const diffDias = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+  const diffDias = diferencaEmDias(dataInformada.toISOString(), hoje.toISOString())
 
   if (diffDias > 30) return 'red';
   if (diffDias > 15) return 'orange';
   return 'green';
+}
+
+export function decidirCorChip(data: string): string {
+  const dataInformada = new Date(data);
+  const hoje = new Date();
+  const diffDias = diferencaEmDias(dataInformada.toISOString(), hoje.toISOString())
+
+  if (diffDias > 30) return 'error';
+  if (diffDias > 15) return 'warning';
+  return 'success';
 }
 
 // Formatar data
@@ -58,3 +77,5 @@ export const formatarData = (data: string) => {
     
     return '';
   };
+
+  

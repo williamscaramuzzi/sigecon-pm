@@ -9,6 +9,7 @@ import ConsultarProcessos from '../pages/ConsultarProcessos';
 import VisualizarProcesso from '../pages/VisualizarProcesso';
 import CadastrarContratosEmpenhados from '../pages/CadastrarContratosEmpenhados';
 import ConsultarContratosEmpenhados from '../pages/ConsultarContratosEmpenhados';
+import Desenvolvimento from '../pages/Desenvolvimento';
 
 
 // Rotas protegidas que requerem autenticação
@@ -52,6 +53,10 @@ const AppRoutes: React.FC = () => {
         </ProtectedRoute>
       ),
       children: [
+        {
+          path: 'desenvolvimento',
+          element: <Desenvolvimento />,
+        },
         {
           path: 'dashboard',
           element: <Dashboard />,

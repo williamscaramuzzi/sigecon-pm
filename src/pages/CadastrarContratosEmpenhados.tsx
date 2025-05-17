@@ -141,6 +141,8 @@ const CadastrarContratosEmpenhados: React.FC = () => {
                   onChange={(e) => setNumEmpenho(e.target.value)}
                   placeholder="2025NE000123"
                   variant="outlined"
+                  multiline
+                  rows={4}
                 />
               </Grid>
               
