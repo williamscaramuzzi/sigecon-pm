@@ -21,8 +21,8 @@ import { doc, setDoc } from 'firebase/firestore';
 import { db } from '../config/firebase';
 import { formatarMoeda } from './Helpers';
 
-// Interface para o contrato empenhado
-interface ContratoEmpenhado {
+// Interface para o Empenho
+interface Empenho {
   num_processo: string;
   num_empenho: string;
   valor: number;
@@ -71,7 +71,7 @@ const CadastrarContratosEmpenhados: React.FC = () => {
     setLoading(true);
     
     try {
-      const contratoEmpenhado: ContratoEmpenhado = {
+      const contratoEmpenhado: Empenho = {
         num_processo: numProcesso,
         num_empenho: numEmpenho,
         valor: Number(valor.replace(/\./g, '').replace(',', '.')),
@@ -87,13 +87,13 @@ const CadastrarContratosEmpenhados: React.FC = () => {
       const novoDocRef = doc(db, "contratos_empenhados", docId);
       await setDoc(novoDocRef, contratoEmpenhado);
       
-      setSnackbarMessage('Contrato empenhado cadastrado com sucesso!');
+      setSnackbarMessage('Empenho cadastrado com sucesso!');
       setSnackbarSeverity('success');
       setSnackbarOpen(true);
       handleClear();
     } catch (error) {
-      console.error('Erro ao cadastrar contrato empenhado:', error);
-      setSnackbarMessage('Erro ao cadastrar contrato empenhado. Tente novamente.');
+      console.error('Erro ao cadastrar Empenho:', error);
+      setSnackbarMessage('Erro ao cadastrar Empenho. Tente novamente.');
       setSnackbarSeverity('error');
       setSnackbarOpen(true);
     } finally {
@@ -104,16 +104,16 @@ const CadastrarContratosEmpenhados: React.FC = () => {
   return (
     <Box>
       <Typography variant="h4" component="h1" gutterBottom>
-        Cadastrar Contrato Empenhado
+        Cadastrar Empenho
       </Typography>
       
       <Typography variant="subtitle1" gutterBottom color="text.secondary">
-        Preencha o formulário para cadastrar um novo contrato empenhado no SIGECON-PM
+        Preencha o formulário para cadastrar um novo Empenho no SIGECON-PM
       </Typography>
       
       <Card elevation={2} sx={{ mt: 3 }}>
         <CardHeader 
-          title="Dados do Contrato Empenhado" 
+          title="Dados do Empenho" 
           titleTypographyProps={{ variant: 'h5' }} 
         />
         <Divider />
@@ -193,7 +193,7 @@ const CadastrarContratosEmpenhados: React.FC = () => {
                   label="Observações"
                   value={observacoes}
                   onChange={(e) => setObservacoes(e.target.value)}
-                  placeholder="Observações adicionais sobre o contrato empenhado"
+                  placeholder="Observações adicionais sobre o Empenho"
                   variant="outlined"
                 />
               </Grid>
