@@ -51,6 +51,7 @@ const Dashboard: React.FC = () => {
         snapShot.forEach(processo => {
           const processo_tipado: ProcessoCompra = {
             nup: processo.data().nup,
+            num_sgc: processo.data().num_sgc,
             fonte_recebimento: processo.data().fonte_recebimento,
             objeto: processo.data().objeto,
             quantidade: processo.data().quantidade,
