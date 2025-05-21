@@ -237,7 +237,16 @@ const navigate = useNavigate();
                           direction={orderBy === 'nup' ? order : 'asc'}
                           onClick={() => handleRequestSort('nup')}
                         >
-                          NUP
+                          NUP E-Ms
+                        </TableSortLabel>
+                      </TableCell>
+                      <TableCell>
+                        <TableSortLabel
+                          active={orderBy === 'num_sgc'}
+                          direction={orderBy === 'num_sgc' ? order : 'asc'}
+                          onClick={() => handleRequestSort('num_sgc')}
+                        >
+                          Número do Proc. SGC
                         </TableSortLabel>
                       </TableCell>
                       <TableCell>
@@ -331,6 +340,7 @@ const navigate = useNavigate();
                             </Tooltip>
                           </TableCell>
                           <TableCell>{processo.nup}</TableCell>
+                          <TableCell>{processo.num_sgc}</TableCell>
                           <TableCell>{processo.fonte_recebimento}</TableCell>
                           <TableCell>{processo.uopm_beneficiada}</TableCell>
                           <TableCell>

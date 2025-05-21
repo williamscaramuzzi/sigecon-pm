@@ -1,5 +1,6 @@
 export interface ProcessoCompra {
   nup: string,
+  num_sgc: string,
   fonte_recebimento: string,
   objeto: string,
   quantidade: number,

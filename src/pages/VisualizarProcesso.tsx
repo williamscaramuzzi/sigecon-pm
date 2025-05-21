@@ -550,6 +550,7 @@ const VisualizarProcesso: React.FC = () => {
                 </Typography>
               </Box>
             </Grid>}
+            {renderField("Número do proc. SGC", "num_sgc", processo.num_sgc)}
             {renderField("Fonte de Recebimento", "fonte_recebimento", processo.fonte_recebimento)}
             {renderField("UOPM Beneficiada", "uopm_beneficiada", processo.uopm_beneficiada)}
             {renderField("Valor", "valor", processo.valor, "number")}

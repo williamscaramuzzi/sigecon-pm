@@ -27,9 +27,11 @@ import type { ProcessoCompra } from '../models/ProcessoCompra';
 const CadastrarProcesso: React.FC = () => {
   // Estados para os campos do formulário
   const [nup, setNup] = useState('');
+  const [num_sgc, setNumSgc] = useState('');
   const [fonte_recebimento, setFonteRecebimento] = useState('');
   const [uopm_beneficiada, setUopmBeneficiado] = useState('');
   const [objeto, setObjeto] = useState('');
+  const [categoria, setCategoria] = useState('');
   const [quantidade, setQuantidade] = useState('');
   const [valor, setValor] = useState('');
   const [dataEtapa, setDataEtapa] = useState(new Date().toISOString().slice(0,10))
@@ -74,6 +76,7 @@ const CadastrarProcesso: React.FC = () => {
         nup,
         fonte_recebimento,
         objeto,
+        num_sgc,
         quantidade: Number(quantidade),
         uopm_beneficiada,
         valor: Number(valor.replace(/\./g, '').replace(',', '.')),
@@ -136,6 +139,17 @@ const CadastrarProcesso: React.FC = () => {
                   variant="outlined"
                 />
               </Grid>
+
+              <Grid size={{ xs: 12, md: 6 }}>
+                <TextField
+                  fullWidth
+                  label="Número do Proc. no SGC"
+                  value={num_sgc}
+                  onChange={(e) => setNumSgc(e.target.value)}
+                  placeholder="31/000.000/-2025"
+                  variant="outlined"
+                />
+              </Grid>
               
               <Grid size={{ xs: 12, md: 6 }}>
                 <TextField
@@ -171,6 +185,18 @@ const CadastrarProcesso: React.FC = () => {
                   value={objeto}
                   onChange={(e) => setObjeto(e.target.value)}
                   placeholder="Descreva o objeto do processo"
+                  variant="outlined"
+                />
+              </Grid>
+
+              <Grid size={{ xs: 12 }}>
+                <TextField
+                  fullWidth
+                  required
+                  label="Categoria do Objeto"
+                  value={categoria}
+                  onChange={(e) => setCategoria(e.target.value)}
+                  placeholder="VIATURA, TIC, MATBEL, ETC"
                   variant="outlined"
                 />
               </Grid>
