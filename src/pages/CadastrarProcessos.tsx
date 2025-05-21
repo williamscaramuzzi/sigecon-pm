@@ -75,6 +75,7 @@ const CadastrarProcesso: React.FC = () => {
       const processo: ProcessoCompra = {
         nup,
         fonte_recebimento,
+        categoria,
         objeto,
         num_sgc,
         quantidade: Number(quantidade),

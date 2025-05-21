@@ -269,6 +269,15 @@ const navigate = useNavigate();
                       </TableCell>
                       <TableCell>
                         <TableSortLabel
+                          active={orderBy === 'categoria'}
+                          direction={orderBy === 'categoria' ? order : 'asc'}
+                          onClick={() => handleRequestSort('categoria')}
+                        >
+                          Categoria
+                        </TableSortLabel>
+                      </TableCell>
+                      <TableCell>
+                        <TableSortLabel
                           active={orderBy === 'objeto'}
                           direction={orderBy === 'objeto' ? order : 'asc'}
                           onClick={() => handleRequestSort('objeto')}
@@ -343,6 +352,7 @@ const navigate = useNavigate();
                           <TableCell>{processo.num_sgc}</TableCell>
                           <TableCell>{processo.fonte_recebimento}</TableCell>
                           <TableCell>{processo.uopm_beneficiada}</TableCell>
+                          <TableCell>{processo.categoria}</TableCell>
                           <TableCell>
                             {processo.objeto.length > 100 
                               ? `${processo.objeto.substring(0, 100)}...` 

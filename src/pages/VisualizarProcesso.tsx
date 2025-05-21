@@ -555,6 +555,7 @@ const VisualizarProcesso: React.FC = () => {
             {renderField("UOPM Beneficiada", "uopm_beneficiada", processo.uopm_beneficiada)}
             {renderField("Valor", "valor", processo.valor, "number")}
             {renderField("Quantidade", "quantidade", processo.quantidade, "number")}
+            {renderField("Categoria", "categoria", processo.categoria)}
             {renderField("Objeto", "objeto", processo.objeto)}
 
             {userRole === "gerente" ? (

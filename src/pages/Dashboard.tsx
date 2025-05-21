@@ -53,6 +53,7 @@ const Dashboard: React.FC = () => {
             nup: processo.data().nup,
             num_sgc: processo.data().num_sgc,
             fonte_recebimento: processo.data().fonte_recebimento,
+            categoria: processo.data().categoria,
             objeto: processo.data().objeto,
             quantidade: processo.data().quantidade,
             uopm_beneficiada: processo.data().uopm_beneficiada,
