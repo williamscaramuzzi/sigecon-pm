@@ -88,7 +88,7 @@ const Sidebar: React.FC<SidebarProps> = ({ open, onClose }) => {
               <ListItemIcon>
                 <FindInPageIcon/>
               </ListItemIcon>
-              <ListItemText primary="Consultar Contratos Empenhados" />
+              <ListItemText primary="Consultar Empenhos" />
             </ListItemButton>
         
         {isGerente() && (
@@ -105,7 +105,7 @@ const Sidebar: React.FC<SidebarProps> = ({ open, onClose }) => {
               <ListItemIcon>
                 <PostAddIcon/>
               </ListItemIcon>
-              <ListItemText primary="Cadastrar Contratos Empenhados" />
+              <ListItemText primary="Cadastrar Empenhos" />
             </ListItemButton>
 
             
