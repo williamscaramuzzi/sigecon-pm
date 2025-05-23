@@ -22,7 +22,7 @@ import {
   Chip,
   CircularProgress,
   Alert,
-  Input,
+  Snackbar,
   Autocomplete
 } from '@mui/material';
 import {
@@ -37,7 +37,7 @@ import {
 import { doc, getDoc, updateDoc, collection, query, where, getDocs, deleteDoc, setDoc } from 'firebase/firestore';
 import { db } from '../config/firebase';
 import { useAuth } from '../contexts/AuthContext';
-import { decidirCor, formatarValor, formatarData, diferencaEmDias, decidirCorChip } from './Helpers';
+import { formatarValor, formatarData, diferencaEmDias, decidirCorChip } from './Helpers';
 import { listalocais } from './listalocais';
 import type { ProcessoCompra } from '../models/ProcessoCompra';
 import type { EtapaProcesso } from '../models/EtapaProcesso';
@@ -57,6 +57,9 @@ const VisualizarProcesso: React.FC = () => {
   const [saveLoading, setSaveLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
   const [showAddEtapa, setShowAddEtapa] = useState(false);
+  const [snackbarOpen, setSnackbarOpen] = useState(false);
+  const [snackbarMessage, setSnackbarMessage] = useState('');
+  const [snackbarSeverity, setSnackbarSeverity] = useState<'success' | 'error'>('success');
   const [currentEditingEtapa, setCurrentEditingEtapa] = useState<Omit<EtapaProcesso, 'id'>>({
     nup: processo?.nup,
     data: "",
@@ -92,7 +95,6 @@ const VisualizarProcesso: React.FC = () => {
 
         const etapasSnapshot = await getDocs(etapasQuery);
         const etapasList = etapasSnapshot.docs.map(doc => ({
-          id: doc.id,
           ...doc.data()
         })) as EtapaProcesso[];
 
@@ -125,7 +127,7 @@ const VisualizarProcesso: React.FC = () => {
     //O código abaixo fica escutando a variável idEtapaEditando. Se existe uma etapa sendo editada atualmente, trigga o useeffect.
     //E aí o useEffect seta a currentEditingEtapa como etapa
     if(idEtapaEditando){      
-      const etapaToEdit = etapas.find(e => e.id === idEtapaEditando);
+      const etapaToEdit = etapas.find(etapa => (`${etapa.nup}_${etapa.data}`) === idEtapaEditando);
       if (etapaToEdit) {
         setCurrentEditingEtapa({ ...etapaToEdit });
       }
@@ -308,6 +310,9 @@ const VisualizarProcesso: React.FC = () => {
         listaEtapasDoProcessoExcluido.forEach(async (etapa) => {
           await deleteDoc(doc(db, "etapas", etapa.id))
         })
+        setSnackbarMessage('Processo excluído com sucesso!');
+        setSnackbarSeverity('success');
+        setSnackbarOpen(true);
 
         navigate("/consultar_processos")
       } catch (error) {
@@ -319,8 +324,45 @@ const VisualizarProcesso: React.FC = () => {
 
   }
 
-  function handleArquivarProcesso(e: any) {
-    alert("não implementado ainda")
+  async function handleArquivarProcesso(e: any) {
+    if (!processo || !editValues || !processo.nup) return;
+    const confirmou = confirm(`Tem certeza que deseja concluir o Processo ${processo.nup}?`)
+    if(confirmou){
+      try {    
+        //copiar processo para tabela de concluidos
+        const novoDoc = doc(db, "z_processos_concluidos", processo.nup)
+        await setDoc(novoDoc, processo)
+
+        //tratar as etapas do processo
+        etapas.forEach(async (currentEtapa)=>{
+          //copia cada etapa para a tabela de etapas concluidas
+          const etapaconcluida = doc(db, "z_processos_concluidos_etapas", `${currentEtapa.nup}_${currentEtapa.data}`)
+          await setDoc(etapaconcluida, currentEtapa)
+
+          //deleta cada etapa da tabela etapas normal
+          const etapaADeletar = doc(db, "etapas", `${currentEtapa.nup}_${currentEtapa.data}`)
+          await deleteDoc(etapaADeletar)
+          
+        })
+       
+         //finalmente deleta o processo da tabela processos, pois agora ele está concluido 
+        const processoRef = doc(db, "processos", processo!.nup);
+        await deleteDoc(processoRef)
+
+        setSnackbarMessage('Processo arquivado com sucesso!');
+        setSnackbarSeverity('success');
+        setSnackbarOpen(true);
+
+        navigate('/consultar_processos?page=1&rows=-1')
+
+        
+
+
+        
+      } catch (error) {
+        console.log(error)
+      }
+    }
   }
 
   const handleNovaEtapaChange = (field: keyof Omit<EtapaProcesso, 'id'>, value: string) => {
@@ -349,8 +391,12 @@ const VisualizarProcesso: React.FC = () => {
   }
 
   async function salvarEtapaEditada() {
-    //Reaproveitando a função adicionar etapa, que já atualiza os campos do Processo (data etapa mais recente e status)
-    //Na verdade eu não estou alterando campos de uma etapa, eu to pegando ela inteira e gravando ela inteira sobrescrevendo a antiga
+    //primeiro deleta a etapa antiga
+    const etapaRef = doc(db, "etapas", idEtapaEditando);
+    await deleteDoc(etapaRef)
+
+    //depois adiciona a nova
+
     await adicionarEtapa(currentEditingEtapa)
   }
 
@@ -360,9 +406,9 @@ const VisualizarProcesso: React.FC = () => {
       etapas.map(etapa => {
         //Se a etapa que eu to renderizando agora, for a etapa que está sendo editada, renderizar campos input para edição.
         //Se for uma etapa que NÃO está sendo editada, renderizar campos tablecell normais
-        if (etapa.id === idEtapaEditando) {          
+        if ((`${etapa.nup}_${etapa.data}`) === idEtapaEditando) {          
           return (
-            <TableRow key={etapa.id}>
+            <TableRow key={`${etapa.nup}_${etapa.data}`}>
               <TableCell>
                 <TextField variant="outlined" fullWidth label="Data" type="date"
                     value={currentEditingEtapa.data} 
@@ -417,7 +463,7 @@ const VisualizarProcesso: React.FC = () => {
           )
         } else {
           return (
-            <TableRow key={etapa.id} sx={{
+            <TableRow key={`${etapa.nup}_${etapa.data}`} sx={{
               mt: 1,
               p: 1,
               borderRadius: 1,
@@ -446,7 +492,7 @@ const VisualizarProcesso: React.FC = () => {
                       transition: 'opacity 0.2s'
                     }}
                     onClick={(e) => {
-                      setIdEtapaEditando(etapa.id!)
+                      setIdEtapaEditando(`${etapa.nup}_${etapa.data}`)
                     }}
                   >
                     <EditIcon fontSize="small" />
@@ -480,7 +526,7 @@ const VisualizarProcesso: React.FC = () => {
         <Button
           variant="outlined"
           startIcon={<ArrowBackIcon />}
-          onClick={() => navigate('/consultar_processos')}
+          onClick={() => navigate('/consultar_processos?page=1&rows=-1')}
           sx={{ mt: 2 }}
         >
           Voltar para lista
@@ -565,7 +611,7 @@ const VisualizarProcesso: React.FC = () => {
                   <DeleteIcon />
                 </Button>
                 <Button variant="text" color="secondary" onClick={(e) => { handleArquivarProcesso(e) }}>
-                  Arquivar processo
+                  Concluir processo
                   <ArchiveIcon />
                 </Button>
               </Grid>
@@ -696,6 +742,22 @@ const VisualizarProcesso: React.FC = () => {
           </TableContainer>
         </CardContent>
       </Card>
+
+      {/* Feedback para o usuário */}
+            <Snackbar 
+              open={snackbarOpen} 
+              autoHideDuration={6000} 
+              onClose={() => setSnackbarOpen(false)}
+              anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+            >
+              <Alert 
+                onClose={() => setSnackbarOpen(false)} 
+                severity={snackbarSeverity}
+                variant="filled"
+              >
+                {snackbarMessage}
+              </Alert>
+            </Snackbar>
 
     </Box>
   );

@@ -64,8 +64,8 @@ const Dashboard: React.FC = () => {
           }
           lista_processos_no_banco.push(processo_tipado)
           let hoje = new Date()
-          if(diferencaEmDias(processo.data().data_primeira_etapa, hoje.toISOString())>180) qntProcessosMaisDe180Dias+=1;
-          if(diferencaEmDias(processo.data().data_etapa_mais_recente, hoje.toISOString())>30) qntProcessosParadosHaMaisDe30Dias+=1
+          if (diferencaEmDias(processo.data().data_primeira_etapa, hoje.toISOString()) > 180) qntProcessosMaisDe180Dias += 1;
+          if (diferencaEmDias(processo.data().data_etapa_mais_recente, hoje.toISOString()) > 30) qntProcessosParadosHaMaisDe30Dias += 1
         })
 
         setListaProcessosMaisAntigos(lista_processos_no_banco.slice(0, 5))
@@ -104,6 +104,15 @@ const Dashboard: React.FC = () => {
     if (diffDias > 15) return 'orange';
     return 'green';
   }
+
+  //Dados para o gráfico de pizza
+  const COLORS = ['#fd5022', '#ff9800', '#FFBB28'];
+  const dadosGraficoPizza = [
+    { name: "Parados", value: qtd_processos_parados_ha_mais_tempo },
+    { name: "Antigos", value: qtd_processos_mais_de_180_dias }
+  ]
+
+
   return (
     <Box>
       <Typography variant="h4" component="h1" gutterBottom>
@@ -168,6 +177,8 @@ const Dashboard: React.FC = () => {
             </Box>
           </Paper>
         </Grid>
+
+
 
         {/* Lista de processos recentes */}
         <Grid size={{ xs: 12, md: 9 }}>
