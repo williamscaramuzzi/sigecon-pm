@@ -77,7 +77,7 @@ const Sidebar: React.FC<SidebarProps> = ({ open, onClose }) => {
           <ListItemText primary="Dashboard" />
         </ListItemButton>
                 
-        <ListItemButton onClick={() => navigateTo('/consultar_processos')}>
+        <ListItemButton onClick={() => navigateTo('/consultar_processos?page=1&rows=-1')}>
           <ListItemIcon>
             <SearchIcon />
           </ListItemIcon>

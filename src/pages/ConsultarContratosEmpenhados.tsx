@@ -24,7 +24,7 @@ import {
 } from '@mui/icons-material';
 import { collection, getDocs } from 'firebase/firestore';
 import { db } from '../config/firebase';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { decidirCor, formatarData } from './Helpers';
 
 // Interface para os dados do contrato empenhado
@@ -46,6 +46,7 @@ type OrderBy = keyof ContratoEmpenhado;
 
 const ConsultarContratosEmpenhados: React.FC = () => {
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   // Estado para armazenar os contratos
   const [contratos, setContratos] = useState<ContratoEmpenhado[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
@@ -93,14 +94,17 @@ const ConsultarContratosEmpenhados: React.FC = () => {
   }, []);
 
   // Funções para manipular a paginação
-  const handleChangePage = (event: unknown, newPage: number) => {
-    setPage(newPage);
-  };
-
-  const handleChangeRowsPerPage = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setRowsPerPage(parseInt(event.target.value, 10));
-    setPage(0);
-  };
+    const handleChangePage = (event: unknown, newPage: number) => {
+      setPage(newPage);
+      setSearchParams({page: newPage.toString(), rows: rowsPerPage.toString()})
+    };
+    
+    const handleChangeRowsPerPage = (event: React.ChangeEvent<HTMLInputElement>) => {
+      const rpp = parseInt(event.target.value, 10)
+      setRowsPerPage(rpp);
+      setPage(0);
+      setSearchParams({page: "0", rows: rpp.toString()})
+    };
 
   // Função para lidar com a solicitação de ordenação
   const handleRequestSort = (property: OrderBy) => {
@@ -235,9 +239,14 @@ const ConsultarContratosEmpenhados: React.FC = () => {
             </Box>
           ) : (
             <>
-              <TableContainer component={Paper} sx={{ mb: 2 }}>
+              <TableContainer component={Paper} sx={{ mb: 2, maxHeight: "85vh"}}>
                 <Table sx={{ minWidth: 650 }} aria-label="tabela de contratos empenhados">
-                  <TableHead>
+                  <TableHead sx={{
+                    '& .MuiTableCell-root': {
+                      fontWeight: 'bold',
+                      fontSize: '0.9rem'
+                    },
+                  }}>
                     <TableRow>
                       <TableCell>Ações</TableCell>
                       <TableCell>

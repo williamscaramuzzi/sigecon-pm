@@ -23,7 +23,7 @@ import {
   Visibility as VisibilityIcon} from '@mui/icons-material';
 import { collection, getDocs } from 'firebase/firestore';
 import { db } from '../config/firebase';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams} from 'react-router-dom';
 import { decidirCor, formatarData } from './Helpers';
 import type { ProcessoCompra } from '../models/ProcessoCompra';
 
@@ -35,13 +35,14 @@ type OrderBy = keyof ProcessoCompra;
 
 const ConsultarProcessos: React.FC = () => {
 const navigate = useNavigate();
+const [searchParams, setSearchParams] = useSearchParams();
   // Estado para armazenar os processos
   const [processos, setProcessos] = useState<ProcessoCompra[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   
   // Estado para paginação
-  const [page, setPage] = useState(0);
-  const [rowsPerPage, setRowsPerPage] = useState(10);
+  const [page, setPage] = useState(parseInt(searchParams.get('page') || "1"));
+  const [rowsPerPage, setRowsPerPage] = useState(parseInt(searchParams.get('rows') || "-1"));
   
   // Estado para ordenação
   const [order, setOrder] = useState<Order>('asc');
@@ -84,11 +85,14 @@ const navigate = useNavigate();
   // Funções para manipular a paginação
   const handleChangePage = (event: unknown, newPage: number) => {
     setPage(newPage);
+    setSearchParams({page: newPage.toString(), rows: rowsPerPage.toString()})
   };
   
   const handleChangeRowsPerPage = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setRowsPerPage(parseInt(event.target.value, 10));
+    const rpp = parseInt(event.target.value, 10)
+    setRowsPerPage(rpp);
     setPage(0);
+    setSearchParams({page: "0", rows: rpp.toString()})
   };
   
   // Função para lidar com a solicitação de ordenação
@@ -221,7 +225,7 @@ const navigate = useNavigate();
         Visualize e gerencie os processos cadastrados no SIGECON-PM
       </Typography>
       
-      <Card elevation={2} sx={{ mt: 3 }}>
+      <Card elevation={2} sx={{ mt: 1 }}>
         <CardHeader 
           title="Processos Cadastrados" 
           titleTypographyProps={{ variant: 'h6' }} 
@@ -234,12 +238,12 @@ const navigate = useNavigate();
             </Box>
           ) : (
             <>
-              <TableContainer component={Paper} sx={{ mb: 2, maxHeight: "80vh"}}>
+              <TableContainer component={Paper} sx={{ mb: 2, maxHeight: "85vh"}}>
                 <Table stickyHeader sx={{ minWidth: 650 }} aria-label="tabela de processos">
                   <TableHead sx={{
                     '& .MuiTableCell-root': {
                       fontWeight: 'bold',
-                      fontSize: '1.1rem'
+                      fontSize: '0.9rem'
                     },
                   }}>
                     <TableRow>
@@ -392,8 +396,30 @@ const navigate = useNavigate();
                   </TableBody>
                 </Table>
               </TableContainer>
-              
               <TablePagination
+                sx={{
+                  '.MuiTablePagination-toolbar': {
+                    minHeight: '24px', // ou 24px se quiser mais compacto
+                    paddingTop: 0,
+                    paddingBottom: 0,
+                  },
+                  '.MuiTablePagination-selectLabel, .MuiTablePagination-displayedRows': {
+                    margin: 0,
+                    fontSize: '0.7rem',
+                  },
+                  '.MuiTablePagination-select': {
+                    fontSize: '0.7rem',
+                  },
+                  '.MuiTablePagination-actions': {
+                    marginLeft: '4px',
+                  },
+                  '.MuiTablePagination-actions button': {
+                    padding: '2px', // diminui o botão
+                  },
+                  '.MuiTablePagination-actions svg': {
+                    fontSize: '16px', // tamanho do ícone (padrão é 24px)
+                  },
+                }}
                 rowsPerPageOptions={rowsPerPageOptions}
                 component="div"
                 count={processos.length}
@@ -407,6 +433,8 @@ const navigate = useNavigate();
                 showFirstButton
                 showLastButton
               />
+
+
             </>
           )}
         </CardContent>

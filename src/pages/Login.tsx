@@ -80,7 +80,10 @@ const Login: React.FC = () => {
             </Alert>
           )}
 
-          <Box component="form" onSubmit={handleSubmit} sx={{ mt: 3, width: '100%' }}>
+          <Box autoComplete='on' component="form" onSubmit={handleSubmit} sx={{ mt: 3, width: '100%' }}>
+            <input type="text" name="username" autoComplete="username" style={{ display: 'none' }} />
+            <input type="password" name="password" autoComplete="current-password" style={{ display: 'none' }} />
+            
             <TextField
               margin="normal"
               required
@@ -88,7 +91,7 @@ const Login: React.FC = () => {
               id="email"
               label="E-mail"
               name="email"
-              autoComplete="email"
+              autoComplete="username"
               autoFocus
               value={email}
               onChange={(e) => setEmail(e.target.value)}
