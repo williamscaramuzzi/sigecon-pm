@@ -202,6 +202,14 @@ const navigate = useNavigate();
     navigate(`/processo/${id}`);
   };
 
+  const stickyStyle = {
+    position: 'sticky',
+    top: 0,
+    backgroundColor: 'white',
+    zIndex: 2,
+    borderBottom: '1px solid rgba(224, 224, 224, 1)'
+  }
+
  
   return (
     <Box>
@@ -226,9 +234,14 @@ const navigate = useNavigate();
             </Box>
           ) : (
             <>
-              <TableContainer component={Paper} sx={{ mb: 2 }}>
-                <Table sx={{ minWidth: 650 }} aria-label="tabela de processos">
-                  <TableHead>
+              <TableContainer component={Paper} sx={{ mb: 2, maxHeight: "80vh"}}>
+                <Table stickyHeader sx={{ minWidth: 650 }} aria-label="tabela de processos">
+                  <TableHead sx={{
+                    '& .MuiTableCell-root': {
+                      fontWeight: 'bold',
+                      fontSize: '1.1rem'
+                    },
+                  }}>
                     <TableRow>
                       <TableCell>Ações</TableCell>
                       <TableCell>
