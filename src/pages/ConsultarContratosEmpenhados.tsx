@@ -26,16 +26,12 @@ import { collection, getDocs } from 'firebase/firestore';
 import { db } from '../config/firebase';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { decidirCor, formatarData } from './Helpers';
+import type { ProcessoCompra } from '../models/ProcessoCompra';
 
 // Interface para os dados do contrato empenhado
-interface ContratoEmpenhado {
-  id?: string;
-  num_processo: string;
-  num_empenho: string;
-  valor: number;
-  prazo_entrega: string;
-  uopm_beneficiada: string;
-  observacoes: string;
+export interface ContratoEmpenhado extends ProcessoCompra {
+  num_empenho: string,
+  prazo_entrega: string
 }
 
 // Tipo para a direção da ordenação
@@ -57,7 +53,7 @@ const ConsultarContratosEmpenhados: React.FC = () => {
 
   // Estado para ordenação
   const [order, setOrder] = useState<Order>('asc');
-  const [orderBy, setOrderBy] = useState<OrderBy>('num_processo');
+  const [orderBy, setOrderBy] = useState<OrderBy>('nup');
 
   // Opções de quantidade de itens por página
   const rowsPerPageOptions = [
@@ -76,7 +72,6 @@ const ConsultarContratosEmpenhados: React.FC = () => {
       const contratosList: ContratoEmpenhado[] = contratosSnapshot.docs.map(doc => {
         const data = doc.data() as ContratoEmpenhado;
         return {
-          id: doc.id,
           ...data
         };
       });
@@ -94,17 +89,17 @@ const ConsultarContratosEmpenhados: React.FC = () => {
   }, []);
 
   // Funções para manipular a paginação
-    const handleChangePage = (event: unknown, newPage: number) => {
-      setPage(newPage);
-      setSearchParams({page: newPage.toString(), rows: rowsPerPage.toString()})
-    };
-    
-    const handleChangeRowsPerPage = (event: React.ChangeEvent<HTMLInputElement>) => {
-      const rpp = parseInt(event.target.value, 10)
-      setRowsPerPage(rpp);
-      setPage(0);
-      setSearchParams({page: "0", rows: rpp.toString()})
-    };
+  const handleChangePage = (event: unknown, newPage: number) => {
+    setPage(newPage);
+    setSearchParams({ page: newPage.toString(), rows: rowsPerPage.toString() })
+  };
+
+  const handleChangeRowsPerPage = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const rpp = parseInt(event.target.value, 10)
+    setRowsPerPage(rpp);
+    setPage(0);
+    setSearchParams({ page: "0", rows: rpp.toString() })
+  };
 
   // Função para lidar com a solicitação de ordenação
   const handleRequestSort = (property: OrderBy) => {
@@ -113,31 +108,31 @@ const ConsultarContratosEmpenhados: React.FC = () => {
     setOrderBy(property);
   };
 
-  // Função personalizada para comparar números de processo
-  function compareProcessNumbers(numA: string, numB: string): number {
-    // Extrair o ano do número do processo (assumindo que esteja após o último hífen)
-    const getYear = (num: string): number => {
-      const parts = num.split('-');
+  // Função personalizada para comparar NUPs considerando o ano primeiro
+  function compareNUPs(nupA: string, nupB: string): number {
+    // Extrair o ano do NUP (assumindo que esteja após o último hífen)
+    const getYear = (nup: string): number => {
+      const parts = nup.split('-');
       return parts.length > 1 ? parseInt(parts[parts.length - 1], 10) : 0;
     };
 
     // Extrair o número principal (parte antes do ano)
-    const getMainNumber = (num: string): string => {
-      const parts = num.split('-');
-      return parts.length > 1 ? parts[0] : num;
+    const getMainNumber = (nup: string): string => {
+      const parts = nup.split('-');
+      return parts.length > 1 ? parts[0] : nup;
     };
 
     // Primeiro comparar os anos
-    const yearA = getYear(numA);
-    const yearB = getYear(numB);
+    const yearA = getYear(nupA);
+    const yearB = getYear(nupB);
 
     if (yearA !== yearB) {
       return yearA - yearB; // Ordem crescente por ano
     }
 
     // Se os anos forem iguais, comparar o resto do número
-    const mainA = getMainNumber(numA);
-    const mainB = getMainNumber(numB);
+    const mainA = getMainNumber(nupA);
+    const mainB = getMainNumber(nupB);
 
     return mainA.localeCompare(mainB);
   }
@@ -145,8 +140,8 @@ const ConsultarContratosEmpenhados: React.FC = () => {
   // Função para comparar colunas ao ordenar
   function compareValues(a: ContratoEmpenhado, b: ContratoEmpenhado, orderBy: OrderBy) {
     // Tratamento especial para o campo número do processo
-    if (orderBy === 'num_processo') {
-      return compareProcessNumbers(a.num_processo, b.num_processo);
+    if (orderBy === 'nup') {
+      return compareNUPs(a.nup, b.nup);
     }
 
     // Lógica de ordenação pelo valor R$
@@ -213,7 +208,7 @@ const ConsultarContratosEmpenhados: React.FC = () => {
 
   // Função para ver detalhes do contrato
   const handleVerContrato = (id: string) => {
-    navigate(`/contrato/${id}`);
+    navigate(`/contrato_empenhado/${id}`);
   };
 
   return (
@@ -239,7 +234,7 @@ const ConsultarContratosEmpenhados: React.FC = () => {
             </Box>
           ) : (
             <>
-              <TableContainer component={Paper} sx={{ mb: 2, maxHeight: "85vh"}}>
+              <TableContainer component={Paper} sx={{ mb: 2, maxHeight: "85vh" }}>
                 <Table sx={{ minWidth: 650 }} aria-label="tabela de contratos empenhados">
                   <TableHead sx={{
                     '& .MuiTableCell-root': {
@@ -251,11 +246,11 @@ const ConsultarContratosEmpenhados: React.FC = () => {
                       <TableCell>Ações</TableCell>
                       <TableCell>
                         <TableSortLabel
-                          active={orderBy === 'num_processo'}
-                          direction={orderBy === 'num_processo' ? order : 'asc'}
-                          onClick={() => handleRequestSort('num_processo')}
+                          active={orderBy === 'nup'}
+                          direction={orderBy === 'nup' ? order : 'asc'}
+                          onClick={() => handleRequestSort('nup')}
                         >
-                          Número do Processo
+                          NUP
                         </TableSortLabel>
                       </TableCell>
                       <TableCell>
@@ -294,22 +289,13 @@ const ConsultarContratosEmpenhados: React.FC = () => {
                           UOPM Beneficiada
                         </TableSortLabel>
                       </TableCell>
-                      <TableCell>
-                        <TableSortLabel
-                          active={orderBy === 'observacoes'}
-                          direction={orderBy === 'observacoes' ? order : 'asc'}
-                          onClick={() => handleRequestSort('observacoes')}
-                        >
-                          Observações
-                        </TableSortLabel>
-                      </TableCell>
                     </TableRow>
                   </TableHead>
                   <TableBody>
                     {visibleRows.length > 0 ? (
                       visibleRows.map((contrato) => (
                         <TableRow
-                          key={contrato.id || `${contrato.num_processo}_${contrato.num_empenho}`}
+                          key={contrato.nup}
                           hover
                           sx={{
                             '&:last-child td, &:last-child th': { border: 0 },
@@ -321,16 +307,15 @@ const ConsultarContratosEmpenhados: React.FC = () => {
                           <TableCell>
                             <Tooltip title="Ver detalhes">
                               <IconButton
-                                disabled
                                 size="small"
-                                onClick={() => handleVerContrato(contrato.id || `${contrato.num_processo}_${contrato.num_empenho}`)}
+                                onClick={() => handleVerContrato(contrato.nup)}
                                 color="primary"
                               >
                                 <VisibilityIcon fontSize="small" />
                               </IconButton>
                             </Tooltip>
                           </TableCell>
-                          <TableCell>{contrato.num_processo}</TableCell>
+                          <TableCell>{contrato.nup}</TableCell>
                           <TableCell>{contrato.num_empenho}</TableCell>
                           <TableCell>
                             {new Intl.NumberFormat('pt-BR', {
@@ -342,11 +327,7 @@ const ConsultarContratosEmpenhados: React.FC = () => {
                             {formatarData(contrato.prazo_entrega)}
                           </TableCell>
                           <TableCell>{contrato.uopm_beneficiada}</TableCell>
-                          <TableCell>
-                            {contrato.observacoes && contrato.observacoes.length > 100
-                              ? `${contrato.observacoes.substring(0, 100)}...`
-                              : contrato.observacoes}
-                          </TableCell>
+
                         </TableRow>
                       ))
                     ) : (

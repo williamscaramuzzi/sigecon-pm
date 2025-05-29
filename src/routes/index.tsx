@@ -12,6 +12,7 @@ import ConsultarContratosEmpenhados from '../pages/ConsultarContratosEmpenhados'
 import Desenvolvimento from '../pages/Desenvolvimento';
 import NovoUsuario from '../pages/NovoUsuario';
 import ResetarSenha from '../pages/ResetarSenha';
+import VisualizarContratoEmpenhado from '../pages/VisualizarContratoEmpenhado';
 
 
 // Rotas protegidas que requerem autenticação
@@ -90,6 +91,10 @@ const AppRoutes: React.FC = () => {
         {
           path: '/processo/:id',
           element: <VisualizarProcesso />,
+        },
+        {
+          path: '/contrato_empenhado/:id',
+          element: <VisualizarContratoEmpenhado />,
         },
       ]
     },

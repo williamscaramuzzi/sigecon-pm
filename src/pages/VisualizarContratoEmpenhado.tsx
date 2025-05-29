@@ -2,11 +2,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogContentText,
-  DialogActions,
   Box,
   Typography,
   Paper,
@@ -47,18 +42,21 @@ import { listalocais } from './listalocais';
 import type { ProcessoCompra } from '../models/ProcessoCompra';
 import type { EtapaProcesso } from '../models/EtapaProcesso';
 
-
-const VisualizarProcesso: React.FC = () => {
+interface ContratoEmpenhado extends ProcessoCompra{
+  prazo_entrega: string,
+  num_empenho: string
+}
+const VisualizarContratoEmpenhado: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { userRole } = useAuth();
   // Estados para os dados do processo
-  const [processo, setProcesso] = useState<ProcessoCompra | null>(null);
+  const [processo, setProcesso] = useState<ContratoEmpenhado | null>(null);
   const [etapas, setEtapas] = useState<EtapaProcesso[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [editMode, setEditMode] = useState<Record<string, boolean>>({});
   const [idEtapaEditando, setIdEtapaEditando] = useState("")
-  const [editValues, setEditValues] = useState<ProcessoCompra | null>(null);
+  const [editValues, setEditValues] = useState<ContratoEmpenhado | null>(null);
   const [saveLoading, setSaveLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
   const [showAddEtapa, setShowAddEtapa] = useState(false);
@@ -78,10 +76,6 @@ const VisualizarProcesso: React.FC = () => {
     local: ''
   });
 
-  const [modalEmpenhoOpen, setModalEmpenhoOpen] = useState(false);
-  const [numeroEmpenho, setNumeroEmpenho] = useState('');
-  const [prazoEntrega, setPrazoEntrega] = useState('');
-
   // Buscar dados do processo
   const fetchProcessoData = async () => {
     if (!id) return;
@@ -89,16 +83,16 @@ const VisualizarProcesso: React.FC = () => {
     setLoading(true);
     try {
       // Buscar dados do processo
-      const processoDoc = await getDoc(doc(db, "processos", id));
+      const processoDoc = await getDoc(doc(db, "contratos_empenhados", id));
 
       if (processoDoc.exists()) {
-        const processoData = { ...processoDoc.data() } as ProcessoCompra;
+        const processoData = { ...processoDoc.data() } as ContratoEmpenhado;
         setProcesso(processoData);
         setEditValues(processoData);
 
         // Buscar etapas do processo
         const etapasQuery = query(
-          collection(db, "etapas"),
+          collection(db, "contratos_empenhados_etapas"),
           where("nup", "==", processoData.nup)
         );
 
@@ -135,29 +129,29 @@ const VisualizarProcesso: React.FC = () => {
     fetchProcessoData();
     //O código abaixo fica escutando a variável idEtapaEditando. Se existe uma etapa sendo editada atualmente, trigga o useeffect.
     //E aí o useEffect seta a currentEditingEtapa como etapa
-    if (idEtapaEditando) {
+    if(idEtapaEditando){      
       const etapaToEdit = etapas.find(etapa => (`${etapa.nup}_${etapa.data}`) === idEtapaEditando);
       if (etapaToEdit) {
         setCurrentEditingEtapa({ ...etapaToEdit });
       }
     } else {
       setCurrentEditingEtapa({
-        nup: processo?.nup,
-        data: "",
-        status: '',
-        local: ''
-      });
+            nup: processo?.nup,
+            data: "",
+            status: '',
+            local: ''
+          });
 
     }
   }, [id, idEtapaEditando]);
 
   // Iniciar edição de um campo
-  const handleEditField = (field: keyof ProcessoCompra) => {
+  const handleEditField = (field: keyof ContratoEmpenhado) => {
     setEditMode(prev => ({ ...prev, [field]: true }));
   };
 
   // Cancelar edição
-  const handleCancelEdit = (field: keyof ProcessoCompra) => {
+  const handleCancelEdit = (field: keyof ContratoEmpenhado) => {
     setEditMode(prev => ({ ...prev, [field]: false }));
     if (processo) {
       setEditValues(processo);
@@ -165,7 +159,7 @@ const VisualizarProcesso: React.FC = () => {
   };
 
   // Atualizar valor em edição
-  const handleChangeField = (field: keyof ProcessoCompra, value: any) => {
+  const handleChangeField = (field: keyof ContratoEmpenhado, value: any) => {
     if (editValues) {
       setEditValues({
         ...editValues,
@@ -175,7 +169,7 @@ const VisualizarProcesso: React.FC = () => {
   };
 
   // Salvar campo editado
-  const handleSaveField = async (field: keyof ProcessoCompra) => {
+  const handleSaveField = async (field: keyof ContratoEmpenhado) => {
     if (!processo || !editValues || !processo.nup) return;
 
     setSaveLoading(true);
@@ -205,7 +199,7 @@ const VisualizarProcesso: React.FC = () => {
   };
 
   // Renderizar campo editável ou somente leitura
-  const renderField = (label: string, field: keyof ProcessoCompra, value: any, type: 'text' | 'number' = 'text') => {
+  const renderField = (label: string, field: keyof ContratoEmpenhado, value: any, type: 'text' | 'number' = 'text') => {
     const isEditing = editMode[field];
 
     // Formatar valor para exibição
@@ -265,13 +259,7 @@ const VisualizarProcesso: React.FC = () => {
             >
               {field === 'objeto' ? (
                 <Typography variant="h6">{displayValue}</Typography>
-              ) : field === 'status' ? (
-                <Chip
-                  label={displayValue}
-                  size="medium"
-                  color={"default"}
-                />
-              ) : (
+              ) :  (
                 <Typography variant="h6" sx={{ fontWeight: field === 'nup' ? 'bold' : 'normal' }}>
                   {displayValue}
                 </Typography>
@@ -307,23 +295,23 @@ const VisualizarProcesso: React.FC = () => {
       setSaveLoading(true);
       try {
         //o id é o nup
-        const processoRef = doc(db, "processos", processo.nup);
+        const processoRef = doc(db, "contratos_empenhados", processo.nup);
 
         // Exclui o processo
         await deleteDoc(processoRef)
 
         //Procura todas as etapas e exclui também
-        const etapasRef = collection(db, "etapas")
+        const etapasRef = collection(db, "contratos_empenhados_etapas")
         const q = query(etapasRef, where("nup", "==", processo.nup))
         const listaEtapasDoProcessoExcluido = await getDocs(q)
         listaEtapasDoProcessoExcluido.forEach(async (etapa) => {
-          await deleteDoc(doc(db, "etapas", etapa.id))
+          await deleteDoc(doc(db, "contratos_empenhados_etapas", etapa.id))
         })
         setSnackbarMessage('Processo excluído com sucesso!');
         setSnackbarSeverity('success');
         setSnackbarOpen(true);
 
-        navigate("/consultar_processos")
+        navigate("/consultar_contratos_empenhados?page=1&rows=-1")
       } catch (error) {
         console.error(`Erro ao deletar processo`)
       } finally {
@@ -333,92 +321,41 @@ const VisualizarProcesso: React.FC = () => {
 
   }
 
-  // Função para fechar o modal e limpar os campos
-  const handleCloseModalEmpenho = () => {
-    setModalEmpenhoOpen(false);
-    setNumeroEmpenho('');
-    setPrazoEntrega('');
-  };
-
-  const handleEmpenhar = async () => {
-    if (!numeroEmpenho || !prazoEntrega) return;
-
-    try {
-      //copiar processo para tabela de concluidos
-      const novoDoc = doc(db, "contratos_empenhados", processo!.nup)
-      await setDoc(novoDoc, {...processo, num_empenho: numeroEmpenho, prazo_entrega: prazoEntrega})
-
-      //tratar as etapas do processo
-      etapas.forEach(async (currentEtapa) => {
-        //copia cada etapa para a tabela de etapas concluidas
-        const etapaconcluida = doc(db, "contratos_empenhados_etapas", `${currentEtapa.nup}_${currentEtapa.data}`)
-        await setDoc(etapaconcluida, currentEtapa)
-
-        //deleta cada etapa da tabela etapas normal
-        const etapaADeletar = doc(db, "etapas", `${currentEtapa.nup}_${currentEtapa.data}`)
-        await deleteDoc(etapaADeletar)
-
-      })
-
-      //finalmente deleta o processo da tabela processos, pois agora ele está concluido 
-      const processoRef = doc(db, "processos", processo!.nup);
-      await deleteDoc(processoRef)
-
-      setSnackbarMessage('Processo empenhado com sucesso!');
-      setSnackbarSeverity('success');
-      setSnackbarOpen(true);
-
-      navigate('/consultar_contratos_empenhados?page=1&rows=-1')
-
-    } catch (error) {
-      console.log(error)
-    }
-
-    // Após implementar a lógica, fechar o modal
-    handleCloseModalEmpenho();
-  };
-
-  async function handleAbrirModalEmpenhar(e: any) {
-    if (!processo || !editValues || !processo.nup) return;
-    setModalEmpenhoOpen(true);
-
-  }
-
-  async function handleConcluirProcesso(e: any) {
+  async function handleArquivarProcesso(e: any) {
     if (!processo || !editValues || !processo.nup) return;
     const confirmou = confirm(`Tem certeza que deseja concluir o Processo ${processo.nup}?`)
-    if (confirmou) {
-      try {
+    if(confirmou){
+      try {    
         //copiar processo para tabela de concluidos
         const novoDoc = doc(db, "z_processos_concluidos", processo.nup)
         await setDoc(novoDoc, processo)
 
         //tratar as etapas do processo
-        etapas.forEach(async (currentEtapa) => {
+        etapas.forEach(async (currentEtapa)=>{
           //copia cada etapa para a tabela de etapas concluidas
           const etapaconcluida = doc(db, "z_processos_concluidos_etapas", `${currentEtapa.nup}_${currentEtapa.data}`)
           await setDoc(etapaconcluida, currentEtapa)
 
           //deleta cada etapa da tabela etapas normal
-          const etapaADeletar = doc(db, "etapas", `${currentEtapa.nup}_${currentEtapa.data}`)
+          const etapaADeletar = doc(db, "contratos_empenhados_etapas", `${currentEtapa.nup}_${currentEtapa.data}`)
           await deleteDoc(etapaADeletar)
-
+          
         })
-
-        //finalmente deleta o processo da tabela processos, pois agora ele está concluido 
-        const processoRef = doc(db, "processos", processo!.nup);
+       
+         //finalmente deleta o processo da tabela processos, pois agora ele está concluido 
+        const processoRef = doc(db, "contratos_empenhados", processo!.nup);
         await deleteDoc(processoRef)
 
         setSnackbarMessage('Processo arquivado com sucesso!');
         setSnackbarSeverity('success');
         setSnackbarOpen(true);
 
-        navigate('/consultar_processos?page=1&rows=-1')
+        navigate('/consultar_contratos_empenhados?page=1&rows=-1')
+
+        
 
 
-
-
-
+        
       } catch (error) {
         console.log(error)
       }
@@ -460,47 +397,47 @@ const VisualizarProcesso: React.FC = () => {
     await adicionarEtapa(currentEditingEtapa)
   }
 
-
+  
   function renderEtapasRows(etapas: EtapaProcesso[], label: string, field: keyof ProcessoCompra, value: any, type: 'text' | 'number' = 'text') {
     return (
       etapas.map(etapa => {
         //Se a etapa que eu to renderizando agora, for a etapa que está sendo editada, renderizar campos input para edição.
         //Se for uma etapa que NÃO está sendo editada, renderizar campos tablecell normais
-        if ((`${etapa.nup}_${etapa.data}`) === idEtapaEditando) {
+        if ((`${etapa.nup}_${etapa.data}`) === idEtapaEditando) {          
           return (
             <TableRow key={`${etapa.nup}_${etapa.data}`}>
               <TableCell>
                 <TextField variant="outlined" fullWidth label="Data" type="date"
-                  value={currentEditingEtapa.data}
-                  onChange={(e) => {
-                    setCurrentEditingEtapa(prev => ({ ...prev, data: e.target.value }))
-
-                  }}
-                />
+                    value={currentEditingEtapa.data} 
+                    onChange={(e)=>{
+                      setCurrentEditingEtapa(prev => ({...prev, data: e.target.value}))
+                      
+                    }}
+                  />
               </TableCell>
               <TableCell>
                 <Autocomplete
-                  fullWidth
-                  options={listalocais}
-                  value={currentEditingEtapa.local}
-                  onChange={(event, newValue) => {
-                    setCurrentEditingEtapa(prev => ({ ...prev, local: newValue }))
-                  }}
-                  disableClearable
-                  freeSolo={false}
-                  renderInput={(params) => (
-                    <TextField {...params} label="Local" />
-                  )}
-                />
+                    fullWidth
+                    options={listalocais}
+                    value={currentEditingEtapa.local}
+                    onChange={(event, newValue)=>{
+                      setCurrentEditingEtapa(prev => ({...prev, local: newValue}))
+                    }}
+                    disableClearable
+                    freeSolo={false}
+                    renderInput={(params) => (
+                      <TextField {...params} label="Local" />
+                    )}
+                  />
               </TableCell>
               <TableCell>
-                <TextField variant="outlined"
-                  value={currentEditingEtapa.status}
-                  onChange={(e) => {
-                    setCurrentEditingEtapa(prev => ({ ...prev, status: e.target.value }))
+                <TextField variant="outlined" 
+                  value={currentEditingEtapa.status} 
+                  onChange={(e)=>{
+                    setCurrentEditingEtapa(prev => ({...prev, status: e.target.value}))
                   }}
-
-                />
+                  
+                  />
               </TableCell>
               <TableCell>
                 <IconButton color='primary'
@@ -599,7 +536,7 @@ const VisualizarProcesso: React.FC = () => {
     <Box>
       <Box sx={{ mb: 3, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <Typography variant="h4" component="h1">
-          Visualização de Processo
+          Processo com empenho
         </Typography>
 
         <Button
@@ -648,7 +585,7 @@ const VisualizarProcesso: React.FC = () => {
           <Grid container spacing={2}>
             {<Grid size={{ xs: 12, md: 6 }} sx={{ py: 1 }}>
               <Box sx={{ position: 'relative' }}>
-                <Typography variant="subtitle2" color="text.primary">
+                <Typography variant="subtitle2" color="text.secondary">
                   {"NUP"}
                 </Typography>
                 <Typography variant="h6" sx={{ fontWeight: 'bold' }}>
@@ -663,79 +600,20 @@ const VisualizarProcesso: React.FC = () => {
             {renderField("Quantidade", "quantidade", processo.quantidade, "number")}
             {renderField("Categoria", "categoria", processo.categoria)}
             {renderField("Objeto", "objeto", processo.objeto)}
+            {renderField("Número do empenho", "num_empenho", processo.num_empenho)}
+            {renderField("Prazo de Entrega", "prazo_entrega", processo.prazo_entrega)}
 
             {userRole === "gerente" ? (
-              <>
-                <Grid size={{ xs: 12, md: 6 }} sx={{ py: 1 }}>
-                  <Button variant="outlined" color="secondary" onClick={(e) => { handleAbrirModalEmpenhar(e) }}>
-                    Empenhar processo
-                    <DeleteIcon />
-                  </Button>
-                </Grid>
-                <Grid size={{ xs: 12, md: 6 }} sx={{ py: 1 }}>
-                  <Button variant="outlined" color="error" onClick={(e) => { handleExcluirProcesso(e) }}>
-                    Excluir processo
-                    <DeleteIcon />
-                  </Button>
-                </Grid>
-                <Dialog
-                  open={modalEmpenhoOpen}
-                  onClose={handleCloseModalEmpenho}
-                  maxWidth="sm"
-                  fullWidth
-                >
-                  <DialogTitle>
-                    Empenhar Processo
-                  </DialogTitle>
-                  <DialogContent>
-                    <DialogContentText sx={{ mb: 2 }}>
-                      Informe os dados do empenho para o processo {processo?.nup}
-                    </DialogContentText>
-
-                    <TextField
-                      autoFocus
-                      margin="dense"
-                      label="Número do Empenho"
-                      type="text"
-                      fullWidth
-                      variant="outlined"
-                      value={numeroEmpenho}
-                      onChange={(e) => setNumeroEmpenho(e.target.value)}
-                      sx={{ mb: 2 }}
-                    />
-
-                    <TextField
-                      margin="dense"
-                      label="Prazo de Entrega"
-                      type="date"
-                      fullWidth
-                      variant="outlined"
-                      value={prazoEntrega}
-                      onChange={(e) => setPrazoEntrega(e.target.value)}
-                      InputLabelProps={{
-                        shrink: true,
-                      }}
-                    />
-                  </DialogContent>
-                  <DialogActions>
-                    <Button
-                      onClick={handleCloseModalEmpenho}
-                      color="secondary"
-                    >
-                      Cancelar
-                    </Button>
-                    <Button
-                      onClick={handleEmpenhar}
-                      variant="contained"
-                      color="primary"
-                      disabled={!numeroEmpenho.trim() || !prazoEntrega}
-                    >
-                      Empenhar
-                    </Button>
-                  </DialogActions>
-                </Dialog>
-              </>
-
+              <Grid>
+                <Button variant="outlined" color="error" onClick={(e) => { handleExcluirProcesso(e) }}>
+                  Excluir processo
+                  <DeleteIcon />
+                </Button>
+                <Button variant="text" color="secondary" onClick={(e) => { handleArquivarProcesso(e) }}>
+                  Concluir processo
+                  <ArchiveIcon />
+                </Button>
+              </Grid>
             ) : (<></>)}
           </Grid>
         </CardContent>
@@ -778,7 +656,7 @@ const VisualizarProcesso: React.FC = () => {
                         fullWidth
                         options={listalocais}
                         value={novaEtapa.local}
-                        onChange={(event, newValue) => {
+                        onChange={(event, newValue)=>{
                           handleNovaEtapaChange('local', newValue)
                         }}
                         disableClearable
@@ -865,23 +743,23 @@ const VisualizarProcesso: React.FC = () => {
       </Card>
 
       {/* Feedback para o usuário */}
-      <Snackbar
-        open={snackbarOpen}
-        autoHideDuration={6000}
-        onClose={() => setSnackbarOpen(false)}
-        anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
-      >
-        <Alert
-          onClose={() => setSnackbarOpen(false)}
-          severity={snackbarSeverity}
-          variant="filled"
-        >
-          {snackbarMessage}
-        </Alert>
-      </Snackbar>
+            <Snackbar 
+              open={snackbarOpen} 
+              autoHideDuration={6000} 
+              onClose={() => setSnackbarOpen(false)}
+              anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+            >
+              <Alert 
+                onClose={() => setSnackbarOpen(false)} 
+                severity={snackbarSeverity}
+                variant="filled"
+              >
+                {snackbarMessage}
+              </Alert>
+            </Snackbar>
 
     </Box>
   );
 };
 
-export default VisualizarProcesso;
+export default VisualizarContratoEmpenhado;
