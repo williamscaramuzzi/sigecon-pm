@@ -45,7 +45,7 @@ const Navbar: React.FC<NavbarProps> = ({ onMenuToggle }) => {
   };
 
   return (
-    <AppBar position="sticky" sx={{ backgroundColor: '#1a237e' }}>
+    <AppBar position="sticky" sx={{ backgroundColor: '#1a237e', '@media print': {display: 'none'} }}>
       <Toolbar>
         <IconButton
           edge="start"

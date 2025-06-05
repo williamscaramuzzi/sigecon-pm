@@ -214,11 +214,11 @@ const ConsultarContratosEmpenhados: React.FC = () => {
   return (
     <Box>
       <Typography variant="h4" component="h1" gutterBottom>
-        Consultar Contratos Empenhados
+        Consultar Processos com empenho
       </Typography>
 
       <Typography variant="subtitle1" gutterBottom color="text.secondary">
-        Visualize e gerencie os contratos empenhados cadastrados no SIGECON-PM
+        Visualize e gerencie os processos empenhados cadastrados no SIGECON-PM
       </Typography>
 
       <Card elevation={2} sx={{ mt: 3 }}>

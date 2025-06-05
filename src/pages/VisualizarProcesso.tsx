@@ -1,6 +1,18 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import './VisualizarProcesso.css'
+import {
+  Legend,
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+  LabelList,
+} from 'recharts';
 import {
   Dialog,
   DialogTitle,
@@ -82,6 +94,10 @@ const VisualizarProcesso: React.FC = () => {
   const [numeroEmpenho, setNumeroEmpenho] = useState('');
   const [prazoEntrega, setPrazoEntrega] = useState('');
 
+  //Dados para o gráfico
+  const [dadosgrafico1, setDadosGrafico1] = useState<{ local: string, num_dias: number }[]>([{ local: 'Setor 1', num_dias: 5 }]);
+  const [dadosgrafico2, setDadosGrafico2] = useState<{ local: string, num_dias: number }[]>([{ local: 'Setor 1', num_dias: 5 }]);
+
   // Buscar dados do processo
   const fetchProcessoData = async () => {
     if (!id) return;
@@ -119,6 +135,40 @@ const VisualizarProcesso: React.FC = () => {
             nup: processoData.nup
           }
         })
+
+        const resultado = sortedEtapas.map((etapa, index) => {
+          const dataAtual = new Date(etapa.data);
+          let dataReferencia: Date;
+
+          if (index === 0) {
+            // Para a primeira etapa, compara com hoje
+            dataReferencia = new Date();
+          } else {
+            // Para as demais, compara com a etapa anterior
+            dataReferencia = new Date(sortedEtapas[index - 1].data);
+          }
+
+          const diferencaMs = dataReferencia.getTime() - dataAtual.getTime();
+          const num_dias = Math.ceil(diferencaMs / (1000 * 60 * 60 * 24)); // Arredonda para cima
+
+          return {
+            local: etapa.local,
+            num_dias: num_dias >= 0 ? num_dias : 0,  // Garante que não fique negativo se ocorrer erro
+          };
+        });
+        setDadosGrafico1(resultado);
+        const dadosAgrupados: { local: string; num_dias: number; }[] = Object.values(
+          resultado.reduce((acc: any, cur) => {
+            if (!acc[cur.local]) {
+              acc[cur.local] = { local: cur.local, num_dias: 0 };
+            }
+            acc[cur.local].num_dias += cur.num_dias;
+            return acc;
+          }, {})
+
+        );
+        setDadosGrafico2(dadosAgrupados);
+
       } else {
         setError("Processo não encontrado");
       }
@@ -215,7 +265,7 @@ const VisualizarProcesso: React.FC = () => {
     }
 
     return (
-      <Grid size={{ xs: 12, md: 6 }} sx={{ py: 1 }}>
+      <Grid size={{ xs: 12, md: 6 }} >
         <Box sx={{ position: 'relative' }}>
           <Typography variant="subtitle2" color="text.secondary">
             {label}
@@ -251,8 +301,6 @@ const VisualizarProcesso: React.FC = () => {
           ) : (
             <Box
               sx={{
-                mt: 1,
-                p: 1,
                 borderRadius: 1,
                 position: 'relative',
                 '&:hover': userRole === 'gerente' ? {
@@ -346,7 +394,7 @@ const VisualizarProcesso: React.FC = () => {
     try {
       //copiar processo para tabela de concluidos
       const novoDoc = doc(db, "contratos_empenhados", processo!.nup)
-      await setDoc(novoDoc, {...processo, num_empenho: numeroEmpenho, prazo_entrega: prazoEntrega})
+      await setDoc(novoDoc, { ...processo, num_empenho: numeroEmpenho, prazo_entrega: prazoEntrega })
 
       //tratar as etapas do processo
       etapas.forEach(async (currentEtapa) => {
@@ -568,6 +616,33 @@ const VisualizarProcesso: React.FC = () => {
 
   }
 
+  const CustomTick = (props: any) => {
+    //Esse elemento só serve para formatarmos a legenda dos gráficos e quebrar um nome de setor se for muito grande, tipo SUPLANTEC
+    const { x, y, payload } = props;
+    const texto = payload.value;
+    const limite = 8; // Limite de caracteres antes de "abaixar" o texto
+
+    const deslocamento = texto.length > limite ? 20 : 0; // Aumenta a distância vertical se for grande
+
+    return (
+      <g transform={`translate(${x},${y})`}>
+        <text
+          x={0}
+          y={0}
+          dy={16 + deslocamento} // dy controla o deslocamento vertical
+          textAnchor="middle"
+          fill="#1976d2"
+          fontSize="1.4vw"
+          fontWeight="bold"
+        >
+          {texto}
+        </text>
+      </g>
+    );
+  };
+
+
+
 
 
 
@@ -597,7 +672,7 @@ const VisualizarProcesso: React.FC = () => {
 
   return (
     <Box>
-      <Box sx={{ mb: 3, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+      <Box sx={{ mb: 3, display: 'flex', justifyContent: 'space-between', alignItems: 'center', '@media print': { display: 'none' } }}>
         <Typography variant="h4" component="h1">
           Visualização de Processo
         </Typography>
@@ -664,16 +739,17 @@ const VisualizarProcesso: React.FC = () => {
             {renderField("Categoria", "categoria", processo.categoria)}
             {renderField("Objeto", "objeto", processo.objeto)}
 
+
             {userRole === "gerente" ? (
-              <>
-                <Grid size={{ xs: 12, md: 6 }} sx={{ py: 1 }}>
-                  <Button variant="outlined" color="secondary" onClick={(e) => { handleAbrirModalEmpenhar(e) }}>
+              <Grid container size={{ xs: 12, md: 12 }} spacing={1} sx={{ '@media print': { display: 'none' } }}>
+                <Grid size={{ xs: 10, md: 5 }}>
+                  <Button variant="outlined" color="secondary" sx={{ whiteSpace: 'nowrap' }} onClick={(e) => { handleAbrirModalEmpenhar(e) }}>
                     Empenhar processo
                     <DeleteIcon />
                   </Button>
                 </Grid>
-                <Grid size={{ xs: 12, md: 6 }} sx={{ py: 1 }}>
-                  <Button variant="outlined" color="error" onClick={(e) => { handleExcluirProcesso(e) }}>
+                <Grid size={{ xs: 10, md: 5 }}>
+                  <Button variant="outlined" color="error" sx={{ whiteSpace: 'nowrap' }} onClick={(e) => { handleExcluirProcesso(e) }}>
                     Excluir processo
                     <DeleteIcon />
                   </Button>
@@ -734,7 +810,7 @@ const VisualizarProcesso: React.FC = () => {
                     </Button>
                   </DialogActions>
                 </Dialog>
-              </>
+              </Grid>
 
             ) : (<></>)}
           </Grid>
@@ -879,6 +955,108 @@ const VisualizarProcesso: React.FC = () => {
           {snackbarMessage}
         </Alert>
       </Snackbar>
+
+      <Card
+        sx={{
+          width: '100%',
+          elevation: 2,
+          mt: 3,
+          '@media print': {
+            breakBefore: 'page',
+            pageBreakBefore: 'always',
+            breakInside: 'avoid',
+            pageBreakInside: 'avoid',
+          },
+        }}
+      >
+        <CardHeader
+          title="Tempo por Setor"
+          subheader="Demora, em dias, em cada setor"
+          sx={{
+            '@media print': {
+              breakInside: 'avoid',
+              pageBreakInside: 'avoid',
+            }
+          }}
+        />
+        <CardContent sx={{
+          height: 'auto',
+          overflow: 'visible',
+          '@media print': {
+            height: 'auto !important',
+            overflow: 'visible !important',
+            paddingBottom: '20px !important',
+            breakInside: 'avoid',
+            pageBreakInside: 'avoid',
+          },
+        }}>
+          <Grid container spacing={2} sx={{
+            width: "100%", '@media print': {
+              breakInside: 'avoid',
+              pageBreakInside: 'avoid',
+            },
+          }} >
+            <Grid id='grid_grafico_1' size={{ xs: 12, md: 6}} >
+              <Typography variant="subtitle1" color="black">
+                Etapas sequenciais
+              </Typography>
+              <ResponsiveContainer width="100%" aspect={2}>
+                <BarChart data={dadosgrafico1} margin={{ top: 20, right: 30, left: 0, bottom: 15 }}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="local" tick={<CustomTick />} />
+                  <YAxis />
+                  <Tooltip
+                    content={({ active, payload }) => {
+                      if (active && payload && payload.length) {
+                        const data = payload[0].payload; // o objeto completo do ponto do gráfico
+                        return (
+                          <div style={{ backgroundColor: '#fff', border: '1px solid #ccc', padding: 10 }}>
+                            <p><strong>{data.local}</strong></p>
+                            <p>{`Nº de dias: ${data.num_dias}`}</p>
+                          </div>
+                        );
+                      }
+                      return null;
+                    }}
+                  />
+                  <Bar dataKey="num_dias" fill="#1976d2">
+                    <LabelList
+                      dataKey="num_dias"
+                      position="top"
+                      formatter={(value: any) => `${value} dias`}
+                      style={{ fill: '#1976d2', fontSize: "110%", fontWeight: 'bold' }}
+                    />
+
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
+            </Grid>
+            <Grid id='grid_grafico_2' size={{ xs: 12, md: 6 }}>
+              <Typography variant="subtitle1" color="black">
+                Etapas agrupadas
+              </Typography>
+              <ResponsiveContainer width="100%" aspect={2}>
+                <BarChart data={dadosgrafico2} margin={{ top: 20, right: 30, left: 0, bottom: 15 }}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="local" tick={<CustomTick />} />
+                  <YAxis />
+                  <Tooltip formatter={(value: any, name: any) => {
+                    return [value, 'Nº de dias'];
+                  }} />
+                  <Bar dataKey="num_dias" fill="#1976d2" >
+                    <LabelList
+                      dataKey="num_dias"
+                      position="top"
+                      formatter={(value: any) => `${value} dias`}
+                      style={{ fill: '#1976d2', fontSize: "110%", fontWeight: 'bold' }}
+                    />
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
+            </Grid>
+          </Grid>
+        </CardContent>
+      </Card>
 
     </Box>
   );

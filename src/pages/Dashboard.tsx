@@ -137,7 +137,7 @@ const Dashboard: React.FC = () => {
             <AssignmentIcon sx={{ fontSize: 40, mr: 2, color: '#1565c0' }} />
             <Box>
               <Typography variant="h5">{processos_totais}</Typography>
-              <Typography variant="body2" color="text.secondary">Processos Totais</Typography>
+              <Typography variant="body2" color="text.secondary">Processos em fase de contratação</Typography>
             </Box>
           </Paper>
         </Grid>

@@ -1,0 +1,13 @@
+@media print {
+  .MuiCard-root {
+    overflow: visible !important; /* evita corte */
+    height: auto !important;       /* altura automática */
+  }
+  .recharts-responsive-container {
+    height: 400px !important;      /* altura fixa para impressão */
+  }
+  /* se precisar, ajuste o container Grid pai também */
+  .MuiGrid-root {
+    page-break-inside: avoid;      /* evita quebra dentro do grid */
+  }
+}
