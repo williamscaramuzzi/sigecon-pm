@@ -32,7 +32,7 @@ import type { ProcessoCompra } from '../models/ProcessoCompra';
 const Dashboard: React.FC = () => {
   const navigate = useNavigate();
   const { currentUser, userRole } = useAuth();
-  const [processos_totais, setProcessosTotais] = useState(0)
+  const [processos_em_andamento, setProcessosEmAndamento] = useState(0)
   const [qtd_processos_mais_de_180_dias, setQtdProcessosMaisDe180Dias] = useState(0)
   const [qtd_processos_parados_ha_mais_tempo, setQtdProcessosParadosHaMaisTempo] = useState(0)
   const [lista_processos_mais_antigos, setListaProcessosMaisAntigos] = useState<ProcessoCompra[]>([])
@@ -70,7 +70,7 @@ const Dashboard: React.FC = () => {
 
         setListaProcessosMaisAntigos(lista_processos_no_banco.slice(0, 5))
         const tamanho_da_tabela_processos = await getCountFromServer(processosRef)
-        setProcessosTotais(tamanho_da_tabela_processos.data().count)
+        setProcessosEmAndamento(tamanho_da_tabela_processos.data().count)
         setQtdProcessosMaisDe180Dias(qntProcessosMaisDe180Dias)
         setQtdProcessosParadosHaMaisTempo(qntProcessosParadosHaMaisDe30Dias)
       } catch (error) {
@@ -136,7 +136,7 @@ const Dashboard: React.FC = () => {
           >
             <AssignmentIcon sx={{ fontSize: 40, mr: 2, color: '#1565c0' }} />
             <Box>
-              <Typography variant="h5">{processos_totais}</Typography>
+              <Typography variant="h5">{processos_em_andamento}</Typography>
               <Typography variant="body2" color="text.secondary">Processos em fase de contratação</Typography>
             </Box>
           </Paper>

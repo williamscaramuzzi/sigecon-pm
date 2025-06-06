@@ -109,10 +109,10 @@ try {
       </Typography>
       
       <Typography variant="subtitle1" gutterBottom color="text.secondary">
-        Preencha o formulário para cadastrar um novo processo no SIGECON-PM
+        Local destinado apenas para testes de desenvolvimento.
       </Typography>
 
-      <Button variant='outlined' onClick={(e) => {executar(e)}}>Executar</Button>
+      <Button disabled variant='outlined' onClick={(e) => {executar(e)}}>Executar</Button>
         <br />
       <textarea id="textarea" name="textarea" rows={5} cols={100} value={conteudoTextArea} disabled/>
     </Box>

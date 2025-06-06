@@ -11,3 +11,9 @@ export interface ProcessoCompra {
   data_etapa_mais_recente: string,
   status: string
 }
+
+// Interface para os dados do contrato empenhado
+export interface ContratoEmpenhado extends ProcessoCompra {
+  num_empenho: string,
+  prazo_entrega: string
+}

@@ -13,6 +13,7 @@ import Desenvolvimento from '../pages/Desenvolvimento';
 import NovoUsuario from '../pages/NovoUsuario';
 import ResetarSenha from '../pages/ResetarSenha';
 import VisualizarContratoEmpenhado from '../pages/VisualizarContratoEmpenhado';
+import RelatorioGeral from '../pages/RelatorioGeral';
 
 
 // Rotas protegidas que requerem autenticação
@@ -67,6 +68,10 @@ const AppRoutes: React.FC = () => {
         {
           path: 'desenvolvimento',
           element: <Desenvolvimento />,
+        },
+        {
+          path: 'relatorio_geral',
+          element: <RelatorioGeral />,
         },
         {
           path: 'dashboard',

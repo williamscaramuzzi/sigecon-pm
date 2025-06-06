@@ -16,7 +16,7 @@ import {
   Dashboard as DashboardIcon,
   AddCircleOutline as AddIcon,
   Search as SearchIcon,
-  Settings as SettingsIcon
+  Assessment as AssessmentIcon
 } from '@mui/icons-material';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
@@ -106,6 +106,13 @@ const Sidebar: React.FC<SidebarProps> = ({ open, onClose }) => {
                 <PostAddIcon/>
               </ListItemIcon>
               <ListItemText primary="Cadastrar Empenhos" />
+            </ListItemButton>
+
+            <ListItemButton onClick={() => navigateTo('/relatorio_geral')}>
+              <ListItemIcon>
+                <AssessmentIcon />
+              </ListItemIcon>
+              <ListItemText primary="Relatório Geral" />
             </ListItemButton>
 
             

@@ -26,13 +26,8 @@ import { collection, getDocs } from 'firebase/firestore';
 import { db } from '../config/firebase';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { decidirCor, formatarData } from './Helpers';
-import type { ProcessoCompra } from '../models/ProcessoCompra';
+import type { ContratoEmpenhado, ProcessoCompra } from '../models/ProcessoCompra';
 
-// Interface para os dados do contrato empenhado
-export interface ContratoEmpenhado extends ProcessoCompra {
-  num_empenho: string,
-  prazo_entrega: string
-}
 
 // Tipo para a direção da ordenação
 type Order = 'asc' | 'desc';
