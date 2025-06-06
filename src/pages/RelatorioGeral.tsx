@@ -5,7 +5,8 @@ import {
     Grid,
     Card,
     CardContent,
-    CardHeader
+    CardHeader,
+    CircularProgress
 } from '@mui/material';
 
 
@@ -32,23 +33,14 @@ type ProcessosPorSetor = {
     [key in Setor]: number
 }
 
-
-
-
 const RelatorioGeral: React.FC = () => {
+    const [loading, setLoading] = useState<boolean>(true);
     //Dados para os gráficos
     const [dadosPizza, setDadosPizza] = useState([
         { name: 'Em fase de contratação', value: 400 },
         { name: 'Com empenho', value: 300 },
     ])
-    const [dadosGraficoDiasPorSetor, setDadosGraficoDiasPorSetor] = useState<{ local: string, num_dias: number }[]>([{ local: 'Setor 1', num_dias: 5 }]);
-    const [dadosgrafico2, setDadosGrafico2] = useState<{ local: string, num_dias: number }[]>([{ local: 'Setor 1', num_dias: 4 }, { local: 'Setor 2', num_dias: 5 }, { local: 'Setor 3', num_dias: 5 }]);
-
-    const [processos_em_andamento, setProcessosEmAndamento] = useState([{}])
-    const [processos_empenhados, setProcessosEmpenhados] = useState([{}])
     const [qntTotalDeProcessos, setQntTotalDeProcessos] = useState(0)
-    const [etapas_em_andamento, setEtapasEmAndamento] = useState([{}])
-    const [etapas_empenhadas, setEtapasEmpenhadas] = useState([{}])
 
     const [listaProcessosPorSetor, setListaProcessosPorSetor] = useState([{
         name: "",
@@ -80,9 +72,10 @@ const RelatorioGeral: React.FC = () => {
         value: 0
     }])
 
-    
+
 
     const fetchProcessos = async () => {
+        setLoading(true)
         try {
             //Processos em andamento e suas etapas
             const processosEmAndamentoCollection = collection(db, "processos");
@@ -94,7 +87,6 @@ const RelatorioGeral: React.FC = () => {
                     ...data
                 };
             });
-            setProcessosEmAndamento(processosEmAndamentoList);
 
             //lista de processos parados em cada setor
             const listaAcumuladaProcessosPorSetor: ProcessosPorSetor = Object.fromEntries(
@@ -203,7 +195,6 @@ const RelatorioGeral: React.FC = () => {
                     ...data
                 };
             });
-            setProcessosEmpenhados(processosEmpenhadosList);
 
             //Aqui iremos ver processo por processo (dos empenhados agora), e capturar todas as etapas de cada um  
             for (const processo of processosEmpenhadosList) {
@@ -322,8 +313,6 @@ const RelatorioGeral: React.FC = () => {
                 }));
 
 
-
-
             setDadosPizza([{ name: 'Em fase de contratação', value: processosEmAndamentoList.length }, { name: 'Com empenho', value: processosEmpenhadosList.length },])
             setQntTotalDeProcessos(processosEmAndamentoList.length + processosEmpenhadosList.length)
 
@@ -336,9 +325,8 @@ const RelatorioGeral: React.FC = () => {
             setListaDiasEmpenhadosPorSetor(dadosBarChartDiasPorSetorEmpenhados)
         } catch (error) {
             console.error("Erro ao buscar processos:", error);
-        } finally {
-
         }
+        setLoading(false)
     };
 
     //elemento custom tick para legenda de cada barra não ficar grande demais, subindo uma nas outras
@@ -401,301 +389,312 @@ const RelatorioGeral: React.FC = () => {
             <Typography variant="h4" component="h1" gutterBottom>
                 Relatório Geral
             </Typography>
+            {loading ? (
+                <Box display="flex" justifyContent="center" alignItems="center" height="300px">
+                    <CircularProgress /> <br />
+                    <Typography variant="subtitle1" gutterBottom color="text.secondary">
+                        Gerando gráficos
+                    </Typography>
+                </Box>
+            ) : (
+                <>
+                    <Card id='Card_processos_totais'
+                        sx={{
+                            width: '100%',
+                            elevation: 2,
+                            mt: 3,
+                            '@media print': {
+                                breakBefore: 'page',
+                                pageBreakBefore: 'always',
+                                breakInside: 'avoid',
+                                pageBreakInside: 'avoid',
+                            },
+                        }}
+                    >
+                        <CardHeader
+                            title="Processos totais"
+                            subheader="Dados sobre os todos os processos, com empenho e sem empenho"
+                            sx={{
+                                '@media print': {
+                                    breakInside: 'avoid',
+                                    pageBreakInside: 'avoid',
+                                }
+                            }}
+                        />
+                        <CardContent sx={{
+                            height: 'auto',
+                            overflow: 'visible',
+                            '@media print': {
+                                height: 'auto !important',
+                                overflow: 'visible !important',
+                                paddingBottom: '20px !important',
+                                breakInside: 'avoid',
+                                pageBreakInside: 'avoid',
+                            },
+                        }}>
+                            <Grid container spacing={2} sx={{
+                                width: "100%", '@media print': {
+                                    breakInside: 'avoid',
+                                    pageBreakInside: 'avoid',
+                                },
+                            }} >
+                                <Grid size={{ xs: 12, md: 4 }} >
+                                    <Typography variant="subtitle1" color="black">
+                                        Total de processos: {qntTotalDeProcessos}
+                                    </Typography>
+                                    <ResponsiveContainer width="100%" height="90%" >
+                                        <PieChart>
+                                            <Pie
+                                                data={dadosPizza}
+                                                legendType='circle'
+                                                cx="50%"
+                                                cy="50%"
+                                                label={renderCustomLabel}
+                                                labelLine={false}
+                                                outerRadius={"100vw"}
+                                                fill="#8884d8"
+                                                dataKey="value"
+                                            >
+                                                {dadosPizza.map((entry, index) => (
+                                                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                                                ))}
+                                            </Pie>
+                                            <Legend verticalAlign="top" height={36} />
+                                        </PieChart>
+                                    </ResponsiveContainer>
+                                </Grid>
 
-            <Card id='Card_processos_totais'
-                sx={{
-                    width: '100%',
-                    elevation: 2,
-                    mt: 3,
-                    '@media print': {
-                        breakBefore: 'page',
-                        pageBreakBefore: 'always',
-                        breakInside: 'avoid',
-                        pageBreakInside: 'avoid',
-                    },
-                }}
-            >
-                <CardHeader
-                    title="Processos totais"
-                    subheader="Dados sobre os todos os processos, com empenho e sem empenho"
-                    sx={{
-                        '@media print': {
-                            breakInside: 'avoid',
-                            pageBreakInside: 'avoid',
-                        }
-                    }}
-                />
-                <CardContent sx={{
-                    height: 'auto',
-                    overflow: 'visible',
-                    '@media print': {
-                        height: 'auto !important',
-                        overflow: 'visible !important',
-                        paddingBottom: '20px !important',
-                        breakInside: 'avoid',
-                        pageBreakInside: 'avoid',
-                    },
-                }}>
-                    <Grid container spacing={2} sx={{
-                        width: "100%", '@media print': {
-                            breakInside: 'avoid',
-                            pageBreakInside: 'avoid',
-                        },
-                    }} >
-                        <Grid size={{ xs: 12, md: 4 }} >
-                            <Typography variant="subtitle1" color="black">
-                                Total de processos: {qntTotalDeProcessos}
-                            </Typography>
-                            <ResponsiveContainer width="100%" height="90%" >
-                                <PieChart>
-                                    <Pie
-                                        data={dadosPizza}
-                                        legendType='circle'
-                                        cx="50%"
-                                        cy="50%"
-                                        label={renderCustomLabel}
-                                        labelLine={false}
-                                        outerRadius={"100vw"}
-                                        fill="#8884d8"
-                                        dataKey="value"
-                                    >
-                                        {dadosPizza.map((entry, index) => (
-                                            <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                                        ))}
-                                    </Pie>
-                                    <Legend verticalAlign="top" height={36} />
-                                </PieChart>
-                            </ResponsiveContainer>
-                        </Grid>
+                                <Grid size={{ xs: 12, md: 4 }}>
+                                    <Typography variant="subtitle1" color="black">
+                                        Processos totais, por setor
+                                    </Typography>
+                                    <ResponsiveContainer width="100%" aspect={2}>
+                                        <BarChart data={listaProcessosPorSetor} margin={{ top: 20, right: 30, left: 0, bottom: 15 }} >
+                                            <CartesianGrid strokeDasharray="3 3" />
+                                            <XAxis dataKey="name" tick={<CustomTick />} interval={0} />
+                                            <YAxis />
+                                            <Tooltip formatter={(value: any) => {
+                                                return [value, 'Processos'];
+                                            }} />
+                                            <Bar dataKey="value" fill={COLORS[0]} >
+                                                <LabelList
+                                                    dataKey="value"
+                                                    position="top"
+                                                    style={{ fill: '#1976d2', fontSize: "110%", fontWeight: 'bold' }}
+                                                />
+                                            </Bar>
+                                        </BarChart>
+                                    </ResponsiveContainer>
+                                </Grid>
 
-                        <Grid size={{ xs: 12, md: 4 }}>
-                            <Typography variant="subtitle1" color="black">
-                                Processos totais, por setor
-                            </Typography>
-                            <ResponsiveContainer width="100%" aspect={2}>
-                                <BarChart data={listaProcessosPorSetor} margin={{ top: 20, right: 30, left: 0, bottom: 15 }} >
-                                    <CartesianGrid strokeDasharray="3 3" />
-                                    <XAxis dataKey="name" tick={<CustomTick />} interval={0} />
-                                    <YAxis />
-                                    <Tooltip formatter={(value: any) => {
-                                        return [value, 'Processos'];
-                                    }} />
-                                    <Bar dataKey="value" fill={COLORS[0]} >
-                                        <LabelList
-                                            dataKey="value"
-                                            position="top"
-                                            style={{ fill: '#1976d2', fontSize: "110%", fontWeight: 'bold' }}
-                                        />
-                                    </Bar>
-                                </BarChart>
-                            </ResponsiveContainer>
-                        </Grid>
+                                <Grid size={{ xs: 12, md: 4 }}>
+                                    <Typography variant="subtitle1" color="black">
+                                        Dias por setor
+                                    </Typography>
+                                    <ResponsiveContainer width="100%" aspect={2}>
+                                        <BarChart data={listaDiasPorSetor} margin={{ top: 20, right: 30, left: 0, bottom: 15 }} >
+                                            <CartesianGrid strokeDasharray="3 3" />
+                                            <XAxis dataKey="name" tick={<CustomTick />} interval={0} />
+                                            <YAxis />
+                                            <Tooltip formatter={(value: any) => {
+                                                return [value, 'Nº de dias:'];
+                                            }} />
+                                            <Bar dataKey="value" fill={COLORS[1]} >
+                                                <LabelList
+                                                    dataKey="value"
+                                                    position="top"
+                                                    style={{ fill: '#1976d2', fontSize: "110%", fontWeight: 'bold' }}
+                                                />
+                                            </Bar>
+                                        </BarChart>
+                                    </ResponsiveContainer>
+                                </Grid>
+                            </Grid>
+                        </CardContent>
+                    </Card>
 
-                        <Grid size={{ xs: 12, md: 4 }}>
-                            <Typography variant="subtitle1" color="black">
-                                Dias por setor
-                            </Typography>
-                            <ResponsiveContainer width="100%" aspect={2}>
-                                <BarChart data={listaDiasPorSetor} margin={{ top: 20, right: 30, left: 0, bottom: 15 }} >
-                                    <CartesianGrid strokeDasharray="3 3" />
-                                    <XAxis dataKey="name" tick={<CustomTick />} interval={0} />
-                                    <YAxis />
-                                    <Tooltip formatter={(value: any) => {
-                                        return [value, 'Nº de dias:'];
-                                    }} />
-                                    <Bar dataKey="value" fill={COLORS[1]} >
-                                        <LabelList
-                                            dataKey="value"
-                                            position="top"
-                                            style={{ fill: '#1976d2', fontSize: "110%", fontWeight: 'bold' }}
-                                        />
-                                    </Bar>
-                                </BarChart>
-                            </ResponsiveContainer>
-                        </Grid>
-                    </Grid>
-                </CardContent>
-            </Card>
+                    <Card id='card_processos_em_andamento'
+                        sx={{
+                            width: '100%',
+                            elevation: 2,
+                            mt: 3,
+                            '@media print': {
+                                breakBefore: 'page',
+                                pageBreakBefore: 'always',
+                                breakInside: 'avoid',
+                                pageBreakInside: 'avoid',
+                            },
+                        }}
+                    >
+                        <CardHeader
+                            title="Processos em fase de contratação"
+                            subheader="Dados sobre os processos que ainda não foram empenhados"
+                            sx={{
+                                '@media print': {
+                                    breakInside: 'avoid',
+                                    pageBreakInside: 'avoid',
+                                }
+                            }}
+                        />
+                        <CardContent sx={{
+                            height: 'auto',
+                            overflow: 'visible',
+                            '@media print': {
+                                height: 'auto !important',
+                                overflow: 'visible !important',
+                                paddingBottom: '20px !important',
+                                breakInside: 'avoid',
+                                pageBreakInside: 'avoid',
+                            },
+                        }}>
+                            <Grid container spacing={2} sx={{
+                                width: "100%", '@media print': {
+                                    breakInside: 'avoid',
+                                    pageBreakInside: 'avoid',
+                                },
+                            }} >
+                                <Grid size={{ xs: 12, md: 6 }} >
+                                    <Typography variant="subtitle1" color="black">
+                                        Processos em fase de contratação, por setor
+                                    </Typography>
+                                    <ResponsiveContainer width="100%" aspect={2}>
+                                        <BarChart data={listaProcessosEmAndamentoPorSetor} margin={{ top: 20, right: 30, left: 0, bottom: 15 }}>
+                                            <CartesianGrid strokeDasharray="3 3" />
+                                            <XAxis dataKey="name" tick={<CustomTick />} interval={0} />
+                                            <YAxis />
+                                            <Tooltip formatter={(value: any) => {
+                                                return [value, 'Processos'];
+                                            }} />
+                                            <Bar dataKey="value" fill={COLORS[0]}>
+                                                <LabelList
+                                                    dataKey="value"
+                                                    position="top"
+                                                    style={{ fill: '#1976d2', fontSize: "110%", fontWeight: 'bold' }}
+                                                />
 
-            <Card id='card_processos_em_andamento'
-                sx={{
-                    width: '100%',
-                    elevation: 2,
-                    mt: 3,
-                    '@media print': {
-                        breakBefore: 'page',
-                        pageBreakBefore: 'always',
-                        breakInside: 'avoid',
-                        pageBreakInside: 'avoid',
-                    },
-                }}
-            >
-                <CardHeader
-                    title="Processos em fase de contratação"
-                    subheader="Dados sobre os processos que ainda não foram empenhados"
-                    sx={{
-                        '@media print': {
-                            breakInside: 'avoid',
-                            pageBreakInside: 'avoid',
-                        }
-                    }}
-                />
-                <CardContent sx={{
-                    height: 'auto',
-                    overflow: 'visible',
-                    '@media print': {
-                        height: 'auto !important',
-                        overflow: 'visible !important',
-                        paddingBottom: '20px !important',
-                        breakInside: 'avoid',
-                        pageBreakInside: 'avoid',
-                    },
-                }}>
-                    <Grid container spacing={2} sx={{
-                        width: "100%", '@media print': {
-                            breakInside: 'avoid',
-                            pageBreakInside: 'avoid',
-                        },
-                    }} >
-                        <Grid size={{ xs: 12, md: 6 }} >
-                            <Typography variant="subtitle1" color="black">
-                                Processos em fase de contratação, por setor
-                            </Typography>
-                            <ResponsiveContainer width="100%" aspect={2}>
-                                <BarChart data={listaProcessosEmAndamentoPorSetor} margin={{ top: 20, right: 30, left: 0, bottom: 15 }}>
-                                    <CartesianGrid strokeDasharray="3 3" />
-                                    <XAxis dataKey="name" tick={<CustomTick />} interval={0} />
-                                    <YAxis />
-                                    <Tooltip formatter={(value: any) => {
-                                        return [value, 'Processos'];
-                                    }} />
-                                    <Bar dataKey="value" fill={COLORS[0]}>
-                                        <LabelList
-                                            dataKey="value"
-                                            position="top"
-                                            style={{ fill: '#1976d2', fontSize: "110%", fontWeight: 'bold' }}
-                                        />
+                                            </Bar>
+                                        </BarChart>
+                                    </ResponsiveContainer>
+                                </Grid>
+                                <Grid size={{ xs: 12, md: 6 }}>
+                                    <Typography variant="subtitle1" color="black">
+                                        Dias por setor
+                                    </Typography>
+                                    <ResponsiveContainer width="100%" aspect={2}>
+                                        <BarChart data={listaDiasEmAndamentoPorSetor} margin={{ top: 20, right: 30, left: 0, bottom: 15 }}>
+                                            <CartesianGrid strokeDasharray="3 3" />
+                                            <XAxis dataKey="name" tick={<CustomTick />} interval={0} />
+                                            <YAxis />
+                                            <Tooltip formatter={(value: any) => {
+                                                return [value, 'Nº de dias'];
+                                            }} />
+                                            <Bar dataKey="value" fill={COLORS[1]} >
+                                                <LabelList
+                                                    dataKey="value"
+                                                    position="top"
+                                                    formatter={(value: any) => `${value} dias`}
+                                                    style={{ fill: '#1976d2', fontSize: "90%", fontWeight: 'bold' }}
+                                                />
+                                            </Bar>
+                                        </BarChart>
+                                    </ResponsiveContainer>
+                                </Grid>
+                            </Grid>
+                        </CardContent>
+                    </Card>
 
-                                    </Bar>
-                                </BarChart>
-                            </ResponsiveContainer>
-                        </Grid>
-                        <Grid size={{ xs: 12, md: 6 }}>
-                            <Typography variant="subtitle1" color="black">
-                                Dias por setor
-                            </Typography>
-                            <ResponsiveContainer width="100%" aspect={2}>
-                                <BarChart data={listaDiasEmAndamentoPorSetor} margin={{ top: 20, right: 30, left: 0, bottom: 15 }}>
-                                    <CartesianGrid strokeDasharray="3 3" />
-                                    <XAxis dataKey="name" tick={<CustomTick />} interval={0}/>
-                                    <YAxis />
-                                    <Tooltip formatter={(value: any) => {
-                                        return [value, 'Nº de dias'];
-                                    }} />
-                                    <Bar dataKey="value" fill={COLORS[1]} >
-                                        <LabelList
-                                            dataKey="value"
-                                            position="top"
-                                            formatter={(value: any) => `${value} dias`}
-                                            style={{ fill: '#1976d2', fontSize: "90%", fontWeight: 'bold' }}
-                                        />
-                                    </Bar>
-                                </BarChart>
-                            </ResponsiveContainer>
-                        </Grid>
-                    </Grid>
-                </CardContent>
-            </Card>
+                    <Card id='card_processos_em_andamento'
+                        sx={{
+                            width: '100%',
+                            elevation: 2,
+                            mt: 3,
+                            '@media print': {
+                                breakBefore: 'page',
+                                pageBreakBefore: 'always',
+                                breakInside: 'avoid',
+                                pageBreakInside: 'avoid',
+                            },
+                        }}
+                    >
+                        <CardHeader
+                            title="Processos empenhados"
+                            subheader="Dados sobre os processos que já possuem nº de empenho"
+                            sx={{
+                                '@media print': {
+                                    breakInside: 'avoid',
+                                    pageBreakInside: 'avoid',
+                                }
+                            }}
+                        />
+                        <CardContent sx={{
+                            height: 'auto',
+                            overflow: 'visible',
+                            '@media print': {
+                                height: 'auto !important',
+                                overflow: 'visible !important',
+                                paddingBottom: '20px !important',
+                                breakInside: 'avoid',
+                                pageBreakInside: 'avoid',
+                            },
+                        }}>
+                            <Grid container spacing={2} sx={{
+                                width: "100%", '@media print': {
+                                    breakInside: 'avoid',
+                                    pageBreakInside: 'avoid',
+                                },
+                            }} >
+                                <Grid size={{ xs: 12, md: 6 }} >
+                                    <Typography variant="subtitle1" color="black">
+                                        Processos empenhados, por setor
+                                    </Typography>
+                                    <ResponsiveContainer width="100%" aspect={2}>
+                                        <BarChart data={listaProcessosEmpenhadosPorSetor} margin={{ top: 20, right: 30, left: 0, bottom: 15 }}>
+                                            <CartesianGrid strokeDasharray="3 3" />
+                                            <XAxis dataKey="name" tick={<CustomTick />} interval={0} />
+                                            <YAxis />
+                                            <Tooltip formatter={(value: any) => {
+                                                return [value, 'Processos'];
+                                            }} />
+                                            <Bar dataKey="value" fill={COLORS[0]}>
+                                                <LabelList
+                                                    dataKey="value"
+                                                    position="top"
+                                                    style={{ fill: '#1976d2', fontSize: "110%", fontWeight: 'bold' }}
+                                                />
 
-            <Card id='card_processos_em_andamento'
-                sx={{
-                    width: '100%',
-                    elevation: 2,
-                    mt: 3,
-                    '@media print': {
-                        breakBefore: 'page',
-                        pageBreakBefore: 'always',
-                        breakInside: 'avoid',
-                        pageBreakInside: 'avoid',
-                    },
-                }}
-            >
-                <CardHeader
-                    title="Processos empenhados"
-                    subheader="Dados sobre os processos que já possuem nº de empenho"
-                    sx={{
-                        '@media print': {
-                            breakInside: 'avoid',
-                            pageBreakInside: 'avoid',
-                        }
-                    }}
-                />
-                <CardContent sx={{
-                    height: 'auto',
-                    overflow: 'visible',
-                    '@media print': {
-                        height: 'auto !important',
-                        overflow: 'visible !important',
-                        paddingBottom: '20px !important',
-                        breakInside: 'avoid',
-                        pageBreakInside: 'avoid',
-                    },
-                }}>
-                    <Grid container spacing={2} sx={{
-                        width: "100%", '@media print': {
-                            breakInside: 'avoid',
-                            pageBreakInside: 'avoid',
-                        },
-                    }} >
-                        <Grid size={{ xs: 12, md: 6 }} >
-                            <Typography variant="subtitle1" color="black">
-                                Processos empenhados, por setor
-                            </Typography>
-                            <ResponsiveContainer width="100%" aspect={2}>
-                                <BarChart data={listaProcessosEmpenhadosPorSetor} margin={{ top: 20, right: 30, left: 0, bottom: 15 }}>
-                                    <CartesianGrid strokeDasharray="3 3" />
-                                    <XAxis dataKey="name" tick={<CustomTick />} interval={0} />
-                                    <YAxis />
-                                    <Tooltip formatter={(value: any) => {
-                                        return [value, 'Processos'];
-                                    }} />
-                                    <Bar dataKey="value" fill={COLORS[0]}>
-                                        <LabelList
-                                            dataKey="value"
-                                            position="top"
-                                            style={{ fill: '#1976d2', fontSize: "110%", fontWeight: 'bold' }}
-                                        />
+                                            </Bar>
+                                        </BarChart>
+                                    </ResponsiveContainer>
+                                </Grid>
+                                <Grid size={{ xs: 12, md: 6 }}>
+                                    <Typography variant="subtitle1" color="black">
+                                        Dias por setor
+                                    </Typography>
+                                    <ResponsiveContainer width="100%" aspect={2}>
+                                        <BarChart data={listaDiasEmpenhadosPorSetor} margin={{ top: 20, right: 30, left: 0, bottom: 15 }}>
+                                            <CartesianGrid strokeDasharray="3 3" />
+                                            <XAxis dataKey="name" tick={<CustomTick />} interval={0} />
+                                            <YAxis />
+                                            <Tooltip formatter={(value: any) => {
+                                                return [value, 'Nº de dias'];
+                                            }} />
+                                            <Bar dataKey="value" fill={COLORS[1]} >
+                                                <LabelList
+                                                    dataKey="value"
+                                                    position="top"
+                                                    formatter={(value: any) => `${value} dias`}
+                                                    style={{ fill: '#1976d2', fontSize: "90%", fontWeight: 'bold' }}
+                                                />
+                                            </Bar>
+                                        </BarChart>
+                                    </ResponsiveContainer>
+                                </Grid>
+                            </Grid>
+                        </CardContent>
+                    </Card>
+                </>
+            )}
 
-                                    </Bar>
-                                </BarChart>
-                            </ResponsiveContainer>
-                        </Grid>
-                        <Grid size={{ xs: 12, md: 6 }}>
-                            <Typography variant="subtitle1" color="black">
-                                Dias por setor
-                            </Typography>
-                            <ResponsiveContainer width="100%" aspect={2}>
-                                <BarChart data={listaDiasEmpenhadosPorSetor} margin={{ top: 20, right: 30, left: 0, bottom: 15 }}>
-                                    <CartesianGrid strokeDasharray="3 3" />
-                                    <XAxis dataKey="name" tick={<CustomTick />} interval={0}/>
-                                    <YAxis />
-                                    <Tooltip formatter={(value: any) => {
-                                        return [value, 'Nº de dias'];
-                                    }} />
-                                    <Bar dataKey="value" fill={COLORS[1]} >
-                                        <LabelList
-                                            dataKey="value"
-                                            position="top"
-                                            formatter={(value: any) => `${value} dias`}
-                                            style={{ fill: '#1976d2', fontSize: "90%", fontWeight: 'bold' }}
-                                        />
-                                    </Bar>
-                                </BarChart>
-                            </ResponsiveContainer>
-                        </Grid>
-                    </Grid>
-                </CardContent>
-            </Card>
         </Box>
     );
 };
