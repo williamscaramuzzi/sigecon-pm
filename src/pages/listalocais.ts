@@ -9,4 +9,4 @@ export const listalocais = [
     "CCMP", 
     "SAD", 
     "ASSATE/SEJUSP"
-]
+] as const;

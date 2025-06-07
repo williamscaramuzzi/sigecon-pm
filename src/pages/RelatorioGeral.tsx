@@ -23,10 +23,14 @@ interface ProcessoCompraComEtapas extends ProcessoCompra {
     etapas: EtapaProcesso[]
 }
 
-
 type Setor = typeof listalocais[number]
+type DadosSetor = {
+    num_dias: number,
+    contagem: number,
+    media: number
+}
 type DiasPorSetor = {
-    [key in Setor]: number
+    [key in Setor]: DadosSetor
 }
 
 type ProcessosPorSetor = {
@@ -57,20 +61,23 @@ const RelatorioGeral: React.FC = () => {
         value: 0
     }])
 
-    const [listaDiasPorSetor, setListaDiasPorSetor] = useState([{
-        name: "",
-        value: 0
-    }])
+    const [listaDiasPorSetor, setListaDiasPorSetor] = useState(Object.fromEntries(
+        listalocais.map((local) => [
+            { setor: local, num_dias: 0, contagem: 0, media: 0 }
+        ])
+    ))
 
-    const [listaDiasEmAndamentoPorSetor, setListaDiasEmAndamentoPorSetor] = useState([{
-        name: "",
-        value: 0
-    }])
+    const [listaDiasEmAndamentoPorSetor, setListaDiasEmAndamentoPorSetor] = useState(Object.fromEntries(
+        listalocais.map((local) => [
+            { setor: local, num_dias: 0, contagem: 0, media: 0 }
+        ])
+    ))
 
-    const [listaDiasEmpenhadosPorSetor, setListaDiasEmpenhadosPorSetor] = useState([{
-        name: "",
-        value: 0
-    }])
+    const [listaDiasEmpenhadosPorSetor, setListaDiasEmpenhadosPorSetor] = useState(Object.fromEntries(
+        listalocais.map((local) => [
+            { setor: local, num_dias: 0, contagem: 0, media: 0 }
+        ])
+    ))
 
 
 
@@ -103,17 +110,25 @@ const RelatorioGeral: React.FC = () => {
 
             //lista de dias por setor, de cada etapa, de cada processo
             const listaAcumuladaDiasPorSetor: DiasPorSetor = Object.fromEntries(
-                listalocais.map((s) => [s, 0])
+                listalocais.map((local) => [
+                    local,
+                    { num_dias: 0, contagem: 0, media: 0 }
+                ])
             ) as DiasPorSetor;
 
             const listaAcumuladaDiasEmAndamentoPorSetor: DiasPorSetor = Object.fromEntries(
-                listalocais.map((s) => [s, 0])
+                listalocais.map((local) => [
+                    local,
+                    { num_dias: 0, contagem: 0, media: 0 }
+                ])
             ) as DiasPorSetor;
 
             const listaAcumuladaDiasEmpenhadosPorSetor: DiasPorSetor = Object.fromEntries(
-                listalocais.map((s) => [s, 0])
+                listalocais.map((local) => [
+                    local,
+                    { num_dias: 0, contagem: 0, media: 0 }
+                ])
             ) as DiasPorSetor;
-
 
 
             //Aqui iremos ver processo por processo, e capturar todas as etapas de cada um  
@@ -134,13 +149,6 @@ const RelatorioGeral: React.FC = () => {
                 //Aqui apensamos as etapas ao processo, ficando um objeto unico: processo com sua list de etapas, coforme tipado em ProcessoCompraComEtapas
                 processo.etapas = sortedEtapas;
 
-                //desse processo, faremos o cálculo de quantos dias ele ficou parado em cada etapa (cada setor)
-                const listaDiasDesseProcesso: DiasPorSetor = Object.fromEntries(
-                    listalocais.map((s) => [s, 0])
-                ) as DiasPorSetor;
-
-                //console.log(`Analisando etapas do processo ${processo.nup}, foram encontradas ${processo.etapas.length} etapas`)
-
                 sortedEtapas.forEach((etapa, index) => {
                     const dataAtual = new Date(etapa.data);
                     let dataReferencia: Date;
@@ -157,7 +165,6 @@ const RelatorioGeral: React.FC = () => {
                         } else {
                             //console.warn(`Etapa com local inválido ou ausente ignorada no processo ${processo.nup}:`, etapa);
                         }
-
                     } else {
                         dataReferencia = new Date(sortedEtapas[index - 1].data);
                     }
@@ -167,21 +174,20 @@ const RelatorioGeral: React.FC = () => {
 
 
                     // Verifica se currentSetor é válido e está na lista
-                    if (currentSetor && listalocais.includes(currentSetor)) {
-                        listaDiasDesseProcesso[currentSetor] += num_dias;
+                    if (currentSetor && listalocais.includes(currentSetor) && !isNaN(num_dias)) {
+                        listaAcumuladaDiasPorSetor[currentSetor].num_dias += num_dias;
+                        listaAcumuladaDiasPorSetor[currentSetor].contagem += 1
+                        listaAcumuladaDiasPorSetor[currentSetor].media = Math.ceil(listaAcumuladaDiasPorSetor[currentSetor].num_dias / listaAcumuladaDiasPorSetor[currentSetor].contagem)
+
+
+                        listaAcumuladaDiasEmAndamentoPorSetor[currentSetor].num_dias += num_dias;
+                        listaAcumuladaDiasEmAndamentoPorSetor[currentSetor].contagem += 1
+                        listaAcumuladaDiasEmAndamentoPorSetor[currentSetor].media = Math.ceil(listaAcumuladaDiasEmAndamentoPorSetor[currentSetor].num_dias / listaAcumuladaDiasEmAndamentoPorSetor[currentSetor].contagem)
+
                     } else {
                         //console.warn(`Etapa com local inválido ou ausente ignorada no processo ${processo.nup}:`, etapa);
                     }
                 });
-
-                // Acumula no total geral
-                for (const setor of listalocais) {
-                    const valor = listaDiasDesseProcesso[setor];
-                    if (typeof valor === 'number' && !isNaN(valor)) {
-                        listaAcumuladaDiasPorSetor[setor] += valor;
-                        listaAcumuladaDiasEmAndamentoPorSetor[setor] += valor
-                    }
-                }
 
             }
 
@@ -214,13 +220,6 @@ const RelatorioGeral: React.FC = () => {
                 //Aqui apensamos as etapas ao processo, ficando um objeto unico: processo com sua list de etapas, coforme tipado em ProcessoCompraComEtapas
                 processo.etapas = sortedEtapas;
 
-                //desse processo, faremos o cálculo de quantos dias ele ficou parado em cada etapa (cada setor)
-                const listaDiasDesseProcesso: DiasPorSetor = Object.fromEntries(
-                    listalocais.map((s) => [s, 0])
-                ) as DiasPorSetor;
-
-                //console.log(`Analisando etapas do processo ${processo.nup}, foram encontradas ${processo.etapas.length} etapas`)
-
                 sortedEtapas.forEach((etapa, index) => {
                     const dataAtual = new Date(etapa.data);
                     let dataReferencia: Date;
@@ -243,23 +242,21 @@ const RelatorioGeral: React.FC = () => {
 
                     const diferencaMs = dataReferencia.getTime() - dataAtual.getTime();
                     const num_dias = Math.ceil(diferencaMs / (1000 * 60 * 60 * 24));
-
                     // Verifica se currentSetor é válido e está na lista
-                    if (currentSetor && listalocais.includes(currentSetor)) {
-                        listaDiasDesseProcesso[currentSetor] += num_dias;
+                    if (currentSetor && listalocais.includes(currentSetor) && !isNaN(num_dias)) {
+                        listaAcumuladaDiasPorSetor[currentSetor].num_dias += num_dias;
+                        listaAcumuladaDiasPorSetor[currentSetor].contagem += 1
+                        listaAcumuladaDiasPorSetor[currentSetor].media = Math.ceil(listaAcumuladaDiasPorSetor[currentSetor].num_dias / listaAcumuladaDiasPorSetor[currentSetor].contagem)
+
+
+                        listaAcumuladaDiasEmpenhadosPorSetor[currentSetor].num_dias += num_dias;
+                        listaAcumuladaDiasEmpenhadosPorSetor[currentSetor].contagem += 1
+                        listaAcumuladaDiasEmpenhadosPorSetor[currentSetor].media = Math.ceil(listaAcumuladaDiasEmAndamentoPorSetor[currentSetor].num_dias / listaAcumuladaDiasEmAndamentoPorSetor[currentSetor].contagem)
+
                     } else {
                         //console.warn(`Etapa com local inválido ou ausente ignorada no processo ${processo.nup}:`, etapa);
                     }
                 });
-
-                // Acumula no total geral
-                for (const setor of listalocais) {
-                    const valor = listaDiasDesseProcesso[setor];
-                    if (typeof valor === 'number' && !isNaN(valor)) {
-                        listaAcumuladaDiasPorSetor[setor] += valor;
-                        listaAcumuladaDiasEmpenhadosPorSetor[setor] += valor;
-                    }
-                }
 
             }
 
@@ -289,28 +286,25 @@ const RelatorioGeral: React.FC = () => {
                     value
                 }));
 
+            const dadosChartDiasPorSetor = Object.entries(listaAcumuladaDiasPorSetor).map(
+                ([setor, dados]) => ({
+                    setor, // nome do setor vira campo
+                    ...dados, // espalha os atributos: num_dias, contagem, media
+                })
+            );
+            const dadosChartDiasEmAndamentoPorSetor = Object.entries(listaAcumuladaDiasEmAndamentoPorSetor).map(
+                ([setor, dados]) => ({
+                    setor, // nome do setor vira campo
+                    ...dados, // espalha os atributos: num_dias, contagem, media
+                })
+            );
+            const dadosChartDiasEmpenhadosPorSetor = Object.entries(listaAcumuladaDiasEmpenhadosPorSetor).map(
+                ([setor, dados]) => ({
+                    setor, // nome do setor vira campo
+                    ...dados, // espalha os atributos: num_dias, contagem, media
+                })
+            );
 
-            //Vamos transformar a listaAcumulada de Dias por Setor em um formato que o BarChart consegue entender:
-            const dadosBarChartDiasPorSetorGeral = Object.entries(listaAcumuladaDiasPorSetor)
-                .filter(([_, value]) => value > 0) // opcional: remove setores com 0 dias
-                .map(([key, value]) => ({
-                    name: key,
-                    value
-                }));
-
-            const dadosBarChartDiasPorSetorEmAndamento = Object.entries(listaAcumuladaDiasEmAndamentoPorSetor)
-                .filter(([_, value]) => value > 0) // opcional: remove setores com 0 dias
-                .map(([key, value]) => ({
-                    name: key,
-                    value
-                }));
-
-            const dadosBarChartDiasPorSetorEmpenhados = Object.entries(listaAcumuladaDiasEmpenhadosPorSetor)
-                .filter(([_, value]) => value > 0) // opcional: remove setores com 0 dias
-                .map(([key, value]) => ({
-                    name: key,
-                    value
-                }));
 
 
             setDadosPizza([{ name: 'Em fase de contratação', value: processosEmAndamentoList.length }, { name: 'Com empenho', value: processosEmpenhadosList.length },])
@@ -320,9 +314,9 @@ const RelatorioGeral: React.FC = () => {
             setListaProcessosEmAndamentoPorSetor(dadosBarChartProcessosPorSetorEmAndamento)
             setListaProcessosEmpenhadosPorSetor(dadosBarChartProcessosPorSetorEmpenhados)
 
-            setListaDiasPorSetor(dadosBarChartDiasPorSetorGeral)
-            setListaDiasEmAndamentoPorSetor(dadosBarChartDiasPorSetorEmAndamento)
-            setListaDiasEmpenhadosPorSetor(dadosBarChartDiasPorSetorEmpenhados)
+            setListaDiasPorSetor(dadosChartDiasPorSetor)
+            setListaDiasEmAndamentoPorSetor(dadosChartDiasEmAndamentoPorSetor)
+            setListaDiasEmpenhadosPorSetor(dadosChartDiasEmpenhadosPorSetor)
         } catch (error) {
             console.error("Erro ao buscar processos:", error);
         }
@@ -334,7 +328,6 @@ const RelatorioGeral: React.FC = () => {
         //Esse elemento só serve para formatarmos a legenda dos gráficos e quebrar um nome de setor se for muito grande, tipo SUPLANTEC
         const { x, y, payload } = props;
         const texto = payload.value;
-        console.log("texto: ", texto)
         const limite = 8; // Limite de caracteres antes de "abaixar" o texto
 
         const deslocamento = texto.length > limite ? 20 : 0; // Aumenta a distância vertical se for grande
@@ -385,29 +378,54 @@ const RelatorioGeral: React.FC = () => {
     };
 
     return (
-        <Box>
-            <Typography variant="h4" component="h1" gutterBottom>
-                Relatório Geral
-            </Typography>
+        <Box
+            sx={{
+                padding: 0,
+                '@media print': {
+                    breakInside: 'avoid',
+                    pageBreakInside: 'avoid',
+                }
+            }}
+        >
+
             {loading ? (
                 <Box display="flex" justifyContent="center" alignItems="center" height="300px">
                     <CircularProgress /> <br />
-                    <Typography variant="subtitle1" gutterBottom color="text.secondary">
+                    <Typography
+                        sx={{
+                            display: 'inline-block',
+                            '@media print': {
+                                breakAfter: 'avoid',
+                            }
+                        }}
+                    >
                         Gerando gráficos
                     </Typography>
                 </Box>
             ) : (
-                <>
+                <Box>
+                    <Typography variant="h5" component="h5" sx={{
+                        marginTop: -2,
+                        '@media print': {
+                            fontSize: '1rem',
+                            breakAfter: 'avoid',
+                            pageBreakAfter: 'avoid'
+                        }
+                    }} >
+                        Relatório Geral
+                    </Typography>
                     <Card id='Card_processos_totais'
                         sx={{
                             width: '100%',
                             elevation: 2,
-                            mt: 3,
+                            display: 'inline-block',
                             '@media print': {
-                                breakBefore: 'page',
-                                pageBreakBefore: 'always',
                                 breakInside: 'avoid',
                                 pageBreakInside: 'avoid',
+                                pageBreakBefore: 'avoid',
+                                breakBefore: 'avoid',
+                                transform: 'scale(0.85)',
+                                transformOrigin: 'top left',
                             },
                         }}
                     >
@@ -415,6 +433,7 @@ const RelatorioGeral: React.FC = () => {
                             title="Processos totais"
                             subheader="Dados sobre os todos os processos, com empenho e sem empenho"
                             sx={{
+                                padding: 1,
                                 '@media print': {
                                     breakInside: 'avoid',
                                     pageBreakInside: 'avoid',
@@ -427,23 +446,28 @@ const RelatorioGeral: React.FC = () => {
                             '@media print': {
                                 height: 'auto !important',
                                 overflow: 'visible !important',
-                                paddingBottom: '20px !important',
                                 breakInside: 'avoid',
                                 pageBreakInside: 'avoid',
+                                padding: 0,
                             },
                         }}>
-                            <Grid container spacing={2} sx={{
-                                width: "100%", '@media print': {
+                            <Grid container spacing={0} sx={{
+                                width: "100%",
+                                margin: 0,
+                                padding: 0,
+                                '@media print': {
                                     breakInside: 'avoid',
                                     pageBreakInside: 'avoid',
                                 },
-                            }} >
-                                <Grid size={{ xs: 12, md: 4 }} >
-                                    <Typography variant="subtitle1" color="black">
+                            }}>
+                                <Grid size={{ xs: 12, md: 4 }} sx={{
+                                    padding: 0, margin: 0
+                                }}>
+                                    <Typography variant="subtitle1" color="black" sx={{m: 0, p: 0}}>
                                         Total de processos: {qntTotalDeProcessos}
                                     </Typography>
-                                    <ResponsiveContainer width="100%" height="90%" >
-                                        <PieChart>
+                                    <ResponsiveContainer width="100%" height="92%" style={{ padding: 0, margin: 0 }}>
+                                        <PieChart style={{padding: 0}}>
                                             <Pie
                                                 data={dadosPizza}
                                                 legendType='circle'
@@ -451,7 +475,7 @@ const RelatorioGeral: React.FC = () => {
                                                 cy="50%"
                                                 label={renderCustomLabel}
                                                 labelLine={false}
-                                                outerRadius={"100vw"}
+                                                outerRadius={100}
                                                 fill="#8884d8"
                                                 dataKey="value"
                                             >
@@ -464,11 +488,11 @@ const RelatorioGeral: React.FC = () => {
                                     </ResponsiveContainer>
                                 </Grid>
 
-                                <Grid size={{ xs: 12, md: 4 }}>
-                                    <Typography variant="subtitle1" color="black">
-                                        Processos totais, por setor
+                                <Grid size={{ xs: 12, md: 4 }} sx={{ padding: 0, margin: 0 }}>
+                                    <Typography variant="subtitle1" color="black" sx={{m: 0, p: 0}}>
+                                        Nº de processos, em cada setor, hoje
                                     </Typography>
-                                    <ResponsiveContainer width="100%" aspect={2}>
+                                    <ResponsiveContainer width="100%" aspect={2} style={{ padding: 0, margin: 0 }}>
                                         <BarChart data={listaProcessosPorSetor} margin={{ top: 20, right: 30, left: 0, bottom: 15 }} >
                                             <CartesianGrid strokeDasharray="3 3" />
                                             <XAxis dataKey="name" tick={<CustomTick />} interval={0} />
@@ -487,21 +511,21 @@ const RelatorioGeral: React.FC = () => {
                                     </ResponsiveContainer>
                                 </Grid>
 
-                                <Grid size={{ xs: 12, md: 4 }}>
+                                <Grid size={{ xs: 12, md: 4 }} sx={{ padding: 0, margin: 0 }}>
                                     <Typography variant="subtitle1" color="black">
-                                        Dias por setor
+                                        Média de dias que um processo fica parado em cada setor
                                     </Typography>
-                                    <ResponsiveContainer width="100%" aspect={2}>
+                                    <ResponsiveContainer width="100%" aspect={2} style={{ padding: 0, margin: 0 }}>
                                         <BarChart data={listaDiasPorSetor} margin={{ top: 20, right: 30, left: 0, bottom: 15 }} >
                                             <CartesianGrid strokeDasharray="3 3" />
-                                            <XAxis dataKey="name" tick={<CustomTick />} interval={0} />
+                                            <XAxis dataKey="setor" tick={<CustomTick />} interval={0} />
                                             <YAxis />
                                             <Tooltip formatter={(value: any) => {
                                                 return [value, 'Nº de dias:'];
                                             }} />
-                                            <Bar dataKey="value" fill={COLORS[1]} >
+                                            <Bar dataKey="media" fill={COLORS[1]} >
                                                 <LabelList
-                                                    dataKey="value"
+                                                    dataKey="media"
                                                     position="top"
                                                     style={{ fill: '#1976d2', fontSize: "110%", fontWeight: 'bold' }}
                                                 />
@@ -517,8 +541,10 @@ const RelatorioGeral: React.FC = () => {
                         sx={{
                             width: '100%',
                             elevation: 2,
-                            mt: 3,
+                            mt: 0,
                             '@media print': {
+                                transform: 'scale(0.85)',
+                                transformOrigin: 'top left',
                                 breakBefore: 'page',
                                 pageBreakBefore: 'always',
                                 breakInside: 'avoid',
@@ -533,6 +559,7 @@ const RelatorioGeral: React.FC = () => {
                                 '@media print': {
                                     breakInside: 'avoid',
                                     pageBreakInside: 'avoid',
+                                    padding: 0
                                 }
                             }}
                         />
@@ -542,22 +569,22 @@ const RelatorioGeral: React.FC = () => {
                             '@media print': {
                                 height: 'auto !important',
                                 overflow: 'visible !important',
-                                paddingBottom: '20px !important',
                                 breakInside: 'avoid',
                                 pageBreakInside: 'avoid',
+                                padding: 0
                             },
                         }}>
-                            <Grid container spacing={2} sx={{
-                                width: "100%", '@media print': {
+                            <Grid container spacing={1} sx={{
+                                width: "100%", padding: 0, '@media print': {
                                     breakInside: 'avoid',
                                     pageBreakInside: 'avoid',
                                 },
                             }} >
-                                <Grid size={{ xs: 12, md: 6 }} >
+                                <Grid size={{ xs: 12, md: 6 }} sx={{ padding: 0 }} >
                                     <Typography variant="subtitle1" color="black">
-                                        Processos em fase de contratação, por setor
+                                        Nº de processos em fase de contrataçao, em cada setor, hoje
                                     </Typography>
-                                    <ResponsiveContainer width="100%" aspect={2}>
+                                    <ResponsiveContainer width="100%" aspect={2} style={{ padding: 0, margin: 0 }}>
                                         <BarChart data={listaProcessosEmAndamentoPorSetor} margin={{ top: 20, right: 30, left: 0, bottom: 15 }}>
                                             <CartesianGrid strokeDasharray="3 3" />
                                             <XAxis dataKey="name" tick={<CustomTick />} interval={0} />
@@ -576,23 +603,23 @@ const RelatorioGeral: React.FC = () => {
                                         </BarChart>
                                     </ResponsiveContainer>
                                 </Grid>
-                                <Grid size={{ xs: 12, md: 6 }}>
+                                <Grid size={{ xs: 12, md: 6 }} sx={{ padding: 0 }} >
                                     <Typography variant="subtitle1" color="black">
-                                        Dias por setor
+                                        Média de dias que um processo fica parado em cada setor
                                     </Typography>
-                                    <ResponsiveContainer width="100%" aspect={2}>
+                                    <ResponsiveContainer width="100%" aspect={2} style={{ padding: 0, margin: 0 }}>
                                         <BarChart data={listaDiasEmAndamentoPorSetor} margin={{ top: 20, right: 30, left: 0, bottom: 15 }}>
                                             <CartesianGrid strokeDasharray="3 3" />
-                                            <XAxis dataKey="name" tick={<CustomTick />} interval={0} />
+                                            <XAxis dataKey="setor" tick={<CustomTick />} interval={0} />
                                             <YAxis />
                                             <Tooltip formatter={(value: any) => {
                                                 return [value, 'Nº de dias'];
                                             }} />
-                                            <Bar dataKey="value" fill={COLORS[1]} >
+                                            <Bar dataKey="media" fill={COLORS[1]} >
                                                 <LabelList
-                                                    dataKey="value"
+                                                    dataKey="media"
                                                     position="top"
-                                                    formatter={(value: any) => `${value} dias`}
+                                                    formatter={(media: any) => `${media} dias`}
                                                     style={{ fill: '#1976d2', fontSize: "90%", fontWeight: 'bold' }}
                                                 />
                                             </Bar>
@@ -603,16 +630,19 @@ const RelatorioGeral: React.FC = () => {
                         </CardContent>
                     </Card>
 
-                    <Card id='card_processos_em_andamento'
+                    <Card id='card_processos_empenhados'
                         sx={{
                             width: '100%',
                             elevation: 2,
-                            mt: 3,
+                            mt: 0,
                             '@media print': {
+                                transform: 'scale(0.85)',
+                                transformOrigin: 'top left',
                                 breakBefore: 'page',
                                 pageBreakBefore: 'always',
                                 breakInside: 'avoid',
                                 pageBreakInside: 'avoid',
+                                padding: 0
                             },
                         }}
                     >
@@ -623,6 +653,7 @@ const RelatorioGeral: React.FC = () => {
                                 '@media print': {
                                     breakInside: 'avoid',
                                     pageBreakInside: 'avoid',
+                                    padding: 0
                                 }
                             }}
                         />
@@ -632,22 +663,22 @@ const RelatorioGeral: React.FC = () => {
                             '@media print': {
                                 height: 'auto !important',
                                 overflow: 'visible !important',
-                                paddingBottom: '20px !important',
                                 breakInside: 'avoid',
                                 pageBreakInside: 'avoid',
+                                padding: 0
                             },
                         }}>
-                            <Grid container spacing={2} sx={{
+                            <Grid container spacing={1} sx={{
                                 width: "100%", '@media print': {
                                     breakInside: 'avoid',
                                     pageBreakInside: 'avoid',
                                 },
                             }} >
-                                <Grid size={{ xs: 12, md: 6 }} >
+                                <Grid size={{ xs: 12, md: 6 }} sx={{ padding: 0 }} >
                                     <Typography variant="subtitle1" color="black">
-                                        Processos empenhados, por setor
+                                        Nº de processos com empenho em cada setor, hoje
                                     </Typography>
-                                    <ResponsiveContainer width="100%" aspect={2}>
+                                    <ResponsiveContainer width="100%" aspect={2} style={{ padding: 0, margin: 0 }}>
                                         <BarChart data={listaProcessosEmpenhadosPorSetor} margin={{ top: 20, right: 30, left: 0, bottom: 15 }}>
                                             <CartesianGrid strokeDasharray="3 3" />
                                             <XAxis dataKey="name" tick={<CustomTick />} interval={0} />
@@ -666,23 +697,23 @@ const RelatorioGeral: React.FC = () => {
                                         </BarChart>
                                     </ResponsiveContainer>
                                 </Grid>
-                                <Grid size={{ xs: 12, md: 6 }}>
+                                <Grid size={{ xs: 12, md: 6 }} sx={{ padding: 0 }} >
                                     <Typography variant="subtitle1" color="black">
-                                        Dias por setor
+                                        Média de dias que um processo fica parado em cada setor
                                     </Typography>
-                                    <ResponsiveContainer width="100%" aspect={2}>
+                                    <ResponsiveContainer width="100%" aspect={2} style={{ padding: 0, margin: 0 }}>
                                         <BarChart data={listaDiasEmpenhadosPorSetor} margin={{ top: 20, right: 30, left: 0, bottom: 15 }}>
                                             <CartesianGrid strokeDasharray="3 3" />
-                                            <XAxis dataKey="name" tick={<CustomTick />} interval={0} />
+                                            <XAxis dataKey="setor" tick={<CustomTick />} interval={0} />
                                             <YAxis />
                                             <Tooltip formatter={(value: any) => {
                                                 return [value, 'Nº de dias'];
                                             }} />
-                                            <Bar dataKey="value" fill={COLORS[1]} >
+                                            <Bar dataKey="media" fill={COLORS[1]} >
                                                 <LabelList
-                                                    dataKey="value"
+                                                    dataKey="media"
                                                     position="top"
-                                                    formatter={(value: any) => `${value} dias`}
+                                                    formatter={(media: any) => `${media} dias`}
                                                     style={{ fill: '#1976d2', fontSize: "90%", fontWeight: 'bold' }}
                                                 />
                                             </Bar>
@@ -692,7 +723,7 @@ const RelatorioGeral: React.FC = () => {
                             </Grid>
                         </CardContent>
                     </Card>
-                </>
+                </Box>
             )}
 
         </Box>
