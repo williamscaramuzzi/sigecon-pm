@@ -14,6 +14,8 @@ import NovoUsuario from '../pages/NovoUsuario';
 import ResetarSenha from '../pages/ResetarSenha';
 import VisualizarContratoEmpenhado from '../pages/VisualizarContratoEmpenhado';
 import RelatorioGeral from '../pages/RelatorioGeral';
+import ConsultarProcessosArquivados from '../pages/ConsultarProcessosArquivados';
+import VisualizarProcessoArquivado from '../pages/VisualizarProcessoArquivado';
 
 
 // Rotas protegidas que requerem autenticação
@@ -94,12 +96,20 @@ const AppRoutes: React.FC = () => {
           element: <ConsultarProcessos />,
         },
         {
+          path: 'consultar_processos_arquivados',
+          element: <ConsultarProcessosArquivados />,
+        },
+        {
           path: '/processo/:id',
           element: <VisualizarProcesso />,
         },
         {
           path: '/contrato_empenhado/:id',
           element: <VisualizarContratoEmpenhado />,
+        },
+        {
+          path: '/processo_arquivado/:id',
+          element: <VisualizarProcessoArquivado />,
         },
       ]
     },

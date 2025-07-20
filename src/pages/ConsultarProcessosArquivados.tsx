@@ -32,25 +32,25 @@ import { collection, getDocs } from 'firebase/firestore';
 import { db } from '../config/firebase';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { decidirCor, formatarData } from './Helpers';
-import type { ContratoEmpenhado } from '../models/ProcessoCompra';
-
+import type { ProcessoCompra } from '../models/ProcessoCompra';
 
 // Tipo para a direção da ordenação
 type Order = 'asc' | 'desc';
 
 // Propriedade pela qual ordenar
-type OrderBy = keyof ContratoEmpenhado;
+type OrderBy = keyof ProcessoCompra;
 
-const ConsultarContratosEmpenhados: React.FC = () => {
+const ConsultarProcessosArquivados: React.FC = () => {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
-  // Estado para armazenar os contratos
-  const [contratos, setContratos] = useState<ContratoEmpenhado[]>([]);
+
+  // Estado para armazenar os processos
+  const [processos, setProcessos] = useState<ProcessoCompra[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
 
   // Estado para paginação
-  const [page, setPage] = useState(0);
-  const [rowsPerPage, setRowsPerPage] = useState(10);
+  const [page, setPage] = useState(parseInt(searchParams.get('page') || "1"));
+  const [rowsPerPage, setRowsPerPage] = useState(parseInt(searchParams.get('rows') || "-1"));
 
   // Estado para ordenação
   const [order, setOrder] = useState<Order>('asc');
@@ -63,6 +63,9 @@ const ConsultarContratosEmpenhados: React.FC = () => {
   const [mostrarFiltroObjeto, setMostrarFiltroObjeto] = useState(false);
   const [textoObjetoFiltro, setTextoObjetoFiltro] = useState('');
 
+
+
+
   // Opções de quantidade de itens por página
   const rowsPerPageOptions = [
     { value: 10, label: "10" },
@@ -71,36 +74,38 @@ const ConsultarContratosEmpenhados: React.FC = () => {
     { value: -1, label: "Todos" }
   ];
 
-  // Função para buscar contratos do Firestore
-  const fetchContratos = async () => {
+  // Função para buscar processos do Firestore
+  const fetchProcessos = async () => {
     setLoading(true);
     try {
-      const contratosCollection = collection(db, "contratos_empenhados");
-      const contratosSnapshot = await getDocs(contratosCollection);
-      const contratosList: ContratoEmpenhado[] = contratosSnapshot.docs.map(doc => {
-        const data = doc.data() as ContratoEmpenhado;
+      const processosCollection = collection(db, "z_processos_concluidos");
+      const processosSnapshot = await getDocs(processosCollection);
+      const processosList: ProcessoCompra[] = processosSnapshot.docs.map(doc => {
+        const data = doc.data() as ProcessoCompra;
         return {
+          id: doc.id,
           ...data
         };
       });
-      setContratos(contratosList);
-      const categoriasUnicas = Array.from(new Set(contratosList.map(p => p.categoria))).filter(Boolean);
+      setProcessos(processosList);
+      const categoriasUnicas = Array.from(new Set(processosList.map(p => p.categoria))).filter(Boolean);
       setCategoriasUnicas(categoriasUnicas)
+
     } catch (error) {
-      console.error("Erro ao buscar contratos empenhados:", error);
+      console.error("Erro ao buscar processos:", error);
     } finally {
       setLoading(false);
     }
   };
 
-  // Carregar contratos quando o componente montar
+  // Carregar processos quando o componente montar
   useEffect(() => {
-    fetchContratos();
+    fetchProcessos();
   }, []);
 
   useEffect(() => {
-      setPage(0);
-    }, [categoriaFiltro]);
+    setPage(0);
+  }, [categoriaFiltro]);
 
   // Funções para manipular a paginação
   const handleChangePage = (event: unknown, newPage: number) => {
@@ -152,26 +157,26 @@ const ConsultarContratosEmpenhados: React.FC = () => {
   }
 
   // Função para comparar colunas ao ordenar
-  function compareValues(a: ContratoEmpenhado, b: ContratoEmpenhado, orderBy: OrderBy) {
-    // Tratamento especial para o campo número do processo
+  function compareValues(a: ProcessoCompra, b: ProcessoCompra, orderBy: OrderBy) {
+    // Tratamento especial para o campo NUP
     if (orderBy === 'nup') {
       return compareNUPs(a.nup, b.nup);
     }
-
-    // Lógica de ordenação pelo valor R$
-    if (orderBy === 'valor') {
-      const valorA = a[orderBy];
-      const valorB = b[orderBy];
-      if (valorA < valorB) return -1;
-      if (valorA > valorB) return 1;
-      return 0;
+    //lógica para ordenação por quantidade dos objetos comprados
+    if (orderBy === 'quantidade') {
+      const qntA = Number(a[orderBy])
+      const qntB = Number(b[orderBy])
+      if (qntA < qntB) return -1;
+      if (qntA > qntB) return 1;
+      if (qntA === qntB) return 0
     }
-
-    // Lógica de ordenação para prazo de entrega (datas)
-    if (orderBy === 'prazo_entrega') {
-      const dateA = new Date(a[orderBy]);
-      const dateB = new Date(b[orderBy]);
-      return dateA.getTime() - dateB.getTime();
+    //lógica de ordenação pelo valor R$
+    if (orderBy === 'valor') {
+      const qntA = a[orderBy]
+      const qntB = b[orderBy]
+      if (qntA < qntB) return -1;
+      if (qntA > qntB) return 1;
+      if (qntA === qntB) return 0
     }
 
     // Lógica existente para os outros campos
@@ -188,8 +193,8 @@ const ConsultarContratosEmpenhados: React.FC = () => {
   }
 
   // Função para estabilizar a ordenação
-  function stableSort(array: ContratoEmpenhado[], comparator: (a: ContratoEmpenhado, b: ContratoEmpenhado) => number) {
-    const stabilizedThis = array.map((el, index) => [el, index] as [ContratoEmpenhado, number]);
+  function stableSort(array: ProcessoCompra[], comparator: (a: ProcessoCompra, b: ProcessoCompra) => number) {
+    const stabilizedThis = array.map((el, index) => [el, index] as [ProcessoCompra, number]);
     stabilizedThis.sort((a, b) => {
       const order = comparator(a[0], b[0]);
       if (order !== 0) return order;
@@ -199,52 +204,62 @@ const ConsultarContratosEmpenhados: React.FC = () => {
   }
 
   // Função que retorna uma função de comparação baseada na ordem atual
-  function getComparator(order: Order, orderBy: OrderBy): (a: ContratoEmpenhado, b: ContratoEmpenhado) => number {
+  function getComparator(order: Order, orderBy: OrderBy): (a: ProcessoCompra, b: ProcessoCompra) => number {
     return order === 'desc'
       ? (a, b) => compareValues(a, b, orderBy)
       : (a, b) => -compareValues(a, b, orderBy);
   }
 
   // Primeiro, aplica os filtros, seja da categoria ou objeto
-    let processosFiltrados = contratos.filter((p) => {
-      const correspondeCategoria = !categoriaFiltro || p.categoria === categoriaFiltro;
-      const correspondeObjeto = p.objeto.toLowerCase().includes(textoObjetoFiltro.toLowerCase());
-  
-      return correspondeCategoria && correspondeObjeto;
-    });
-  
-    // Em seguida, aplica a ordenação
-    const processosOrdenados = stableSort(processosFiltrados, getComparator(order, orderBy));
-  
-    // Por fim, aplica a paginação
-    let visibleRows: ContratoEmpenhado[];
-    if (rowsPerPage > 0) {
-      visibleRows = processosOrdenados.slice(
-        page * rowsPerPage,
-        page * rowsPerPage + rowsPerPage
-      );
-    } else {
-      visibleRows = processosOrdenados;
-    }
+  let processosFiltrados = processos.filter((p) => {
+    const correspondeCategoria = !categoriaFiltro || p.categoria === categoriaFiltro;
+    const correspondeObjeto = p.objeto.toLowerCase().includes(textoObjetoFiltro.toLowerCase());
+
+    return correspondeCategoria && correspondeObjeto;
+  });
+
+
+  // Em seguida, aplica a ordenação
+  const processosOrdenados = stableSort(processosFiltrados, getComparator(order, orderBy));
+
+  // Por fim, aplica a paginação
+  let visibleRows: ProcessoCompra[];
+  if (rowsPerPage > 0) {
+    visibleRows = processosOrdenados.slice(
+      page * rowsPerPage,
+      page * rowsPerPage + rowsPerPage
+    );
+  } else {
+    visibleRows = processosOrdenados;
+  }
 
   // Renderizar rótulo de "Todos" na paginação
   const getLabelDisplayedRows = ({ from, to, count }: { from: number; to: number; count: number }) => {
     return `${from}–${to} de ${count !== -1 ? count : `mais de ${to}`}`;
   };
 
-  // Função para ver detalhes do contrato
-  const handleVerContrato = (id: string) => {
-    navigate(`/contrato_empenhado/${id}`);
+  // Função para ver detalhes do processo
+  const handleVerProcesso = (id: string) => {
+    navigate(`/processo_arquivado/${id}`);
   };
+
+  const stickyStyle = {
+    position: 'sticky',
+    top: 0,
+    backgroundColor: 'white',
+    zIndex: 2,
+    borderBottom: '1px solid rgba(224, 224, 224, 1)'
+  }
+
 
   return (
     <Box>
-      <Typography variant="h5" component="h5" gutterBottom>
-        Processos com empenho
+      <Typography variant="h4" component="h1" gutterBottom>
+        Processos Arquivados
       </Typography>
 
-      <Card elevation={2} sx={{ mt: 3 }}>
-
+      <Card elevation={2} sx={{ mt: 1 }}>
+        
         <CardContent>
           {loading ? (
             <Box display="flex" justifyContent="center" alignItems="center" height="300px">
@@ -253,7 +268,7 @@ const ConsultarContratosEmpenhados: React.FC = () => {
           ) : (
             <>
               <TableContainer component={Paper} sx={{ mb: 2, maxHeight: "85vh" }}>
-                <Table sx={{ minWidth: 650 }} aria-label="tabela de contratos empenhados">
+                <Table stickyHeader sx={{ minWidth: 650 }} aria-label="tabela de processos">
                   <TableHead sx={{
                     '& .MuiTableCell-root': {
                       fontWeight: 'bold',
@@ -268,34 +283,25 @@ const ConsultarContratosEmpenhados: React.FC = () => {
                           direction={orderBy === 'nup' ? order : 'asc'}
                           onClick={() => handleRequestSort('nup')}
                         >
-                          NUP
+                          NUP E-Ms
                         </TableSortLabel>
                       </TableCell>
                       <TableCell>
                         <TableSortLabel
-                          active={orderBy === 'num_empenho'}
-                          direction={orderBy === 'num_empenho' ? order : 'asc'}
-                          onClick={() => handleRequestSort('num_empenho')}
+                          active={orderBy === 'num_sgc'}
+                          direction={orderBy === 'num_sgc' ? order : 'asc'}
+                          onClick={() => handleRequestSort('num_sgc')}
                         >
-                          Número do Empenho
+                          Número do Proc. SGC
                         </TableSortLabel>
                       </TableCell>
                       <TableCell>
                         <TableSortLabel
-                          active={orderBy === 'valor'}
-                          direction={orderBy === 'valor' ? order : 'asc'}
-                          onClick={() => handleRequestSort('valor')}
+                          active={orderBy === 'fonte_recebimento'}
+                          direction={orderBy === 'fonte_recebimento' ? order : 'asc'}
+                          onClick={() => handleRequestSort('fonte_recebimento')}
                         >
-                          Valor (R$)
-                        </TableSortLabel>
-                      </TableCell>
-                      <TableCell>
-                        <TableSortLabel
-                          active={orderBy === 'prazo_entrega'}
-                          direction={orderBy === 'prazo_entrega' ? order : 'asc'}
-                          onClick={() => handleRequestSort('prazo_entrega')}
-                        >
-                          Prazo de Entrega
+                          Fonte de Recebimento
                         </TableSortLabel>
                       </TableCell>
                       <TableCell>
@@ -392,13 +398,51 @@ const ConsultarContratosEmpenhados: React.FC = () => {
                           </Box>
                         )}
                       </TableCell>
+
+
+                      <TableCell>
+                        <TableSortLabel
+                          active={orderBy === 'quantidade'}
+                          direction={orderBy === 'quantidade' ? order : 'asc'}
+                          onClick={() => handleRequestSort('quantidade')}
+                        >
+                          Quantidade
+                        </TableSortLabel>
+                      </TableCell>
+                      <TableCell>
+                        <TableSortLabel
+                          active={orderBy === 'valor'}
+                          direction={orderBy === 'valor' ? order : 'asc'}
+                          onClick={() => handleRequestSort('valor')}
+                        >
+                          Valor (R$)
+                        </TableSortLabel>
+                      </TableCell>
+                      <TableCell>
+                        <TableSortLabel
+                          active={orderBy === 'data_etapa_mais_recente'}
+                          direction={orderBy === 'data_etapa_mais_recente' ? order : 'asc'}
+                          onClick={() => handleRequestSort('data_etapa_mais_recente')}
+                        >
+                          Data última etapa
+                        </TableSortLabel>
+                      </TableCell>
+                      <TableCell>
+                        <TableSortLabel
+                          active={orderBy === 'status'}
+                          direction={orderBy === 'status' ? order : 'asc'}
+                          onClick={() => handleRequestSort('status')}
+                        >
+                          Status
+                        </TableSortLabel>
+                      </TableCell>
                     </TableRow>
                   </TableHead>
                   <TableBody>
                     {visibleRows.length > 0 ? (
-                      visibleRows.map((contrato) => (
+                      visibleRows.map((processo) => (
                         <TableRow
-                          key={contrato.nup}
+                          key={processo.nup}
                           hover
                           sx={{
                             '&:last-child td, &:last-child th': { border: 0 },
@@ -407,50 +451,73 @@ const ConsultarContratosEmpenhados: React.FC = () => {
                             },
                           }}
                         >
+
                           <TableCell>
                             <Tooltip title="Ver detalhes">
                               <IconButton
                                 size="small"
-                                onClick={() => handleVerContrato(contrato.nup)}
+                                onClick={() => handleVerProcesso(processo.nup)}
                                 color="primary"
                               >
                                 <VisibilityIcon fontSize="small" />
                               </IconButton>
                             </Tooltip>
                           </TableCell>
-                          <TableCell>{contrato.nup}</TableCell>
-                          <TableCell>{contrato.num_empenho}</TableCell>
+                          <TableCell>{processo.nup}</TableCell>
+                          <TableCell>{processo.num_sgc}</TableCell>
+                          <TableCell>{processo.fonte_recebimento}</TableCell>
+                          <TableCell>{processo.uopm_beneficiada}</TableCell>
+                          <TableCell>{processo.categoria}</TableCell>
+                          <TableCell>
+                            {processo.objeto.length > 100
+                              ? `${processo.objeto.substring(0, 100)}...`
+                              : processo.objeto}
+                          </TableCell>
+                          <TableCell>{processo.quantidade}</TableCell>
                           <TableCell>
                             {new Intl.NumberFormat('pt-BR', {
                               style: 'currency',
                               currency: 'BRL'
-                            }).format(contrato.valor)}
+                            }).format(processo.valor)}
                           </TableCell>
-                          <TableCell sx={{ color: `${decidirCor(contrato.prazo_entrega)}` }}>
-                            {formatarData(contrato.prazo_entrega)}
-                          </TableCell>
-                          <TableCell>{contrato.uopm_beneficiada}</TableCell>
-                          <TableCell>{contrato.categoria}</TableCell>
-                          <TableCell>
-                            {contrato.objeto.length > 100
-                              ? `${contrato.objeto.substring(0, 100)}...`
-                              : contrato.objeto}
-                          </TableCell>
-
+                          <TableCell sx={{ color: `${decidirCor(processo.data_etapa_mais_recente)}` }}>{formatarData(processo.data_etapa_mais_recente)}</TableCell>
+                          <TableCell>{processo.status}</TableCell>
                         </TableRow>
                       ))
                     ) : (
                       <TableRow>
                         <TableCell colSpan={7} align="center">
-                          Nenhum contrato empenhado encontrado
+                          Nenhum processo encontrado
                         </TableCell>
                       </TableRow>
                     )}
                   </TableBody>
                 </Table>
               </TableContainer>
-
               <TablePagination
+                sx={{
+                  '.MuiTablePagination-toolbar': {
+                    minHeight: '24px', // ou 24px se quiser mais compacto
+                    paddingTop: 0,
+                    paddingBottom: 0,
+                  },
+                  '.MuiTablePagination-selectLabel, .MuiTablePagination-displayedRows': {
+                    margin: 0,
+                    fontSize: '0.7rem',
+                  },
+                  '.MuiTablePagination-select': {
+                    fontSize: '0.7rem',
+                  },
+                  '.MuiTablePagination-actions': {
+                    marginLeft: '4px',
+                  },
+                  '.MuiTablePagination-actions button': {
+                    padding: '2px', // diminui o botão
+                  },
+                  '.MuiTablePagination-actions svg': {
+                    fontSize: '16px', // tamanho do ícone (padrão é 24px)
+                  },
+                }}
                 rowsPerPageOptions={rowsPerPageOptions}
                 component="div"
                 count={processosFiltrados.length}
@@ -464,6 +531,8 @@ const ConsultarContratosEmpenhados: React.FC = () => {
                 showFirstButton
                 showLastButton
               />
+
+
             </>
           )}
         </CardContent>
@@ -472,4 +541,4 @@ const ConsultarContratosEmpenhados: React.FC = () => {
   );
 };
 
-export default ConsultarContratosEmpenhados;
+export default ConsultarProcessosArquivados;

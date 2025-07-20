@@ -218,7 +218,6 @@ const ConsultarProcessos: React.FC = () => {
     return correspondeCategoria && correspondeObjeto;
   });
 
-
   // Em seguida, aplica a ordenação
   const processosOrdenados = stableSort(processosFiltrados, getComparator(order, orderBy));
 
@@ -255,19 +254,11 @@ const ConsultarProcessos: React.FC = () => {
   return (
     <Box>
       <Typography variant="h4" component="h1" gutterBottom>
-        Consultar Processos
-      </Typography>
-
-      <Typography variant="subtitle1" gutterBottom color="text.secondary">
-        Visualize e gerencie os processos cadastrados no SIGECON-PM
+        Processos em andamento
       </Typography>
 
       <Card elevation={2} sx={{ mt: 1 }}>
-        <CardHeader
-          title="Processos Cadastrados"
-          titleTypographyProps={{ variant: 'h6' }}
-        />
-        <Divider />
+        
         <CardContent>
           {loading ? (
             <Box display="flex" justifyContent="center" alignItems="center" height="300px">

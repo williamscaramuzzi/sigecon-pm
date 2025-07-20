@@ -39,13 +39,10 @@ import { db } from '../config/firebase';
 import { useAuth } from '../contexts/AuthContext';
 import { formatarValor, formatarData, diferencaEmDias, decidirCorChip } from './Helpers';
 import { listalocais } from './listalocais';
-import type { ProcessoCompra } from '../models/ProcessoCompra';
+import type { ContratoEmpenhado } from '../models/ProcessoCompra';
 import type { EtapaProcesso } from '../models/EtapaProcesso';
 
-interface ContratoEmpenhado extends ProcessoCompra{
-  prazo_entrega: string,
-  num_empenho: string
-}
+
 const VisualizarContratoEmpenhado: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
@@ -323,7 +320,7 @@ const VisualizarContratoEmpenhado: React.FC = () => {
 
   async function handleArquivarProcesso(e: any) {
     if (!processo || !editValues || !processo.nup) return;
-    const confirmou = confirm(`Tem certeza que deseja concluir o Processo ${processo.nup}?`)
+    const confirmou = confirm(`Tem certeza que deseja arquivar o Processo ${processo.nup}?`)
     if(confirmou){
       try {    
         //copiar processo para tabela de concluidos
@@ -350,7 +347,7 @@ const VisualizarContratoEmpenhado: React.FC = () => {
         setSnackbarSeverity('success');
         setSnackbarOpen(true);
 
-        navigate('/consultar_contratos_empenhados?page=1&rows=-1')
+        navigate('/consultar_processos_arquivados?page=1&rows=-1')
 
         
 
@@ -398,7 +395,7 @@ const VisualizarContratoEmpenhado: React.FC = () => {
   }
 
   
-  function renderEtapasRows(etapas: EtapaProcesso[], label: string, field: keyof ProcessoCompra, value: any, type: 'text' | 'number' = 'text') {
+  function renderEtapasRows(etapas: EtapaProcesso[]) {
     return (
       etapas.map(etapa => {
         //Se a etapa que eu to renderizando agora, for a etapa que está sendo editada, renderizar campos input para edição.
@@ -542,7 +539,7 @@ const VisualizarContratoEmpenhado: React.FC = () => {
         <Button
           variant="outlined"
           startIcon={<ArrowBackIcon />}
-          onClick={() => navigate('/consultar_processos')}
+          onClick={() => navigate('/consultar_contratos_empenhados')}
         >
           Voltar
         </Button>
@@ -610,7 +607,7 @@ const VisualizarContratoEmpenhado: React.FC = () => {
                   <DeleteIcon />
                 </Button>
                 <Button variant="text" color="secondary" onClick={(e) => { handleArquivarProcesso(e) }}>
-                  Concluir processo
+                  Arquivar processo
                   <ArchiveIcon />
                 </Button>
               </Grid>
@@ -728,7 +725,7 @@ const VisualizarContratoEmpenhado: React.FC = () => {
               </TableHead>
               <TableBody>
                 {etapas.length > 0 ? (
-                  renderEtapasRows(etapas, "label", "nup", "valor", "text")
+                  renderEtapasRows(etapas)
                 ) : (
                   <TableRow>
                     <TableCell colSpan={4} align="center">

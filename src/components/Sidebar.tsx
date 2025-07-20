@@ -16,7 +16,8 @@ import {
   Dashboard as DashboardIcon,
   AddCircleOutline as AddIcon,
   Search as SearchIcon,
-  Assessment as AssessmentIcon
+  Assessment as AssessmentIcon,
+  Source as SourceIcon
 } from '@mui/icons-material';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
@@ -81,14 +82,14 @@ const Sidebar: React.FC<SidebarProps> = ({ open, onClose }) => {
           <ListItemIcon>
             <SearchIcon />
           </ListItemIcon>
-          <ListItemText primary="Consultar Processos" />
+          <ListItemText primary="Consultar processos em andamento" />
         </ListItemButton>
 
         <ListItemButton onClick={() => navigateTo('/consultar_contratos_empenhados')}>
               <ListItemIcon>
                 <FindInPageIcon/>
               </ListItemIcon>
-              <ListItemText primary="Consultar Empenhos" />
+              <ListItemText primary="Consultar processos com empenho" />
             </ListItemButton>
         
         {isGerente() && (
@@ -113,6 +114,14 @@ const Sidebar: React.FC<SidebarProps> = ({ open, onClose }) => {
                 <AssessmentIcon />
               </ListItemIcon>
               <ListItemText primary="Relatório Geral" />
+            </ListItemButton>
+
+            <Divider />
+            <ListItemButton onClick={() => navigateTo('/consultar_processos_arquivados?page=1&rows=-1')}>
+              <ListItemIcon>
+                <SourceIcon />
+              </ListItemIcon>
+              <ListItemText primary="Processos Arquivados" />
             </ListItemButton>
 
             

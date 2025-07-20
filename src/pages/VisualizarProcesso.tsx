@@ -49,7 +49,7 @@ import {
   Archive as ArchiveIcon,
   Cancel as CancelIcon,
   ArrowBack as ArrowBackIcon,
-  Title
+  ArrowForward as ArrowForwardIcon
 } from '@mui/icons-material';
 import { doc, getDoc, updateDoc, collection, query, where, getDocs, deleteDoc, setDoc } from 'firebase/firestore';
 import { db } from '../config/firebase';
@@ -371,7 +371,7 @@ const VisualizarProcesso: React.FC = () => {
         setSnackbarSeverity('success');
         setSnackbarOpen(true);
 
-        navigate("/consultar_processos")
+        navigate("/consultar_processos?page=1&rows=-1")
       } catch (error) {
         console.error(`Erro ao deletar processo`)
       } finally {
@@ -408,7 +408,7 @@ const VisualizarProcesso: React.FC = () => {
 
       })
 
-      //finalmente deleta o processo da tabela processos, pois agora ele está concluido 
+      //finalmente deleta o processo da tabela processos, pois agora ele está empenhado 
       const processoRef = doc(db, "processos", processo!.nup);
       await deleteDoc(processoRef)
 
@@ -461,11 +461,7 @@ const VisualizarProcesso: React.FC = () => {
         setSnackbarSeverity('success');
         setSnackbarOpen(true);
 
-        navigate('/consultar_processos?page=1&rows=-1')
-
-
-
-
+        navigate('/consultar_processos_arquivados?page=1&rows=-1')
 
       } catch (error) {
         console.log(error)
@@ -680,7 +676,7 @@ const VisualizarProcesso: React.FC = () => {
         <Button
           variant="outlined"
           startIcon={<ArrowBackIcon />}
-          onClick={() => navigate('/consultar_processos')}
+          onClick={() => navigate('/consultar_processos?page=1&rows=-1')}
         >
           Voltar
         </Button>
@@ -742,18 +738,27 @@ const VisualizarProcesso: React.FC = () => {
 
             {userRole === "gerente" ? (
               <Grid container size={{ xs: 12, md: 12 }} spacing={1} sx={{ '@media print': { display: 'none' } }}>
-                <Grid size={{ xs: 10, md: 5 }}>
+                <Grid size={{ xs: 10, md: 3 }}>
                   <Button variant="outlined" color="secondary" sx={{ whiteSpace: 'nowrap' }} onClick={(e) => { handleAbrirModalEmpenhar(e) }}>
                     Empenhar processo
-                    <DeleteIcon />
+                    <ArrowForwardIcon />
                   </Button>
                 </Grid>
-                <Grid size={{ xs: 10, md: 5 }}>
+
+                <Grid size={{ xs: 10, md: 3 }}>
+                  <Button variant="outlined" color="secondary" sx={{ whiteSpace: 'nowrap' }} onClick={(e) => { handleConcluirProcesso(e) }}>
+                    Arquivar processo
+                    <ArchiveIcon />
+                  </Button>
+                </Grid>
+
+                <Grid size={{ xs: 10, md: 3 }}>
                   <Button variant="outlined" color="error" sx={{ whiteSpace: 'nowrap' }} onClick={(e) => { handleExcluirProcesso(e) }}>
                     Excluir processo
                     <DeleteIcon />
                   </Button>
                 </Grid>
+
                 <Dialog
                   open={modalEmpenhoOpen}
                   onClose={handleCloseModalEmpenho}
@@ -996,7 +1001,7 @@ const VisualizarProcesso: React.FC = () => {
               pageBreakInside: 'avoid',
             },
           }} >
-            <Grid id='grid_grafico_1' size={{ xs: 12, md: 6}} >
+            <Grid id='grid_grafico_1' size={{ xs: 12, md: 6 }} >
               <Typography variant="subtitle1" color="black">
                 Etapas sequenciais
               </Typography>
