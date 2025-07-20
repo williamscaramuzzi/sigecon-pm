@@ -1,29 +1,33 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  Box, 
-  Typography, 
-  Table, 
-  TableBody, 
-  TableCell, 
-  TableContainer, 
-  TableHead, 
-  TableRow, 
-  Paper, 
-  TablePagination, 
-  TableSortLabel, 
-  IconButton, 
-  Card, 
-  CardContent, 
-  CardHeader, 
-  Divider, 
+import {
+  Box,
+  Typography,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Paper,
+  TablePagination,
+  TableSortLabel,
+  IconButton,
+  Card,
+  CardContent,
+  CardHeader,
+  Divider,
   Tooltip,
-  CircularProgress
+  CircularProgress, 
+  Select, 
+  MenuItem, 
+  FormControl
 } from '@mui/material';
-import { 
-  Visibility as VisibilityIcon} from '@mui/icons-material';
+import {
+  Visibility as VisibilityIcon
+} from '@mui/icons-material';
 import { collection, getDocs } from 'firebase/firestore';
 import { db } from '../config/firebase';
-import { useNavigate, useSearchParams} from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { decidirCor, formatarData } from './Helpers';
 import type { ProcessoCompra } from '../models/ProcessoCompra';
 
@@ -34,28 +38,34 @@ type Order = 'asc' | 'desc';
 type OrderBy = keyof ProcessoCompra;
 
 const ConsultarProcessos: React.FC = () => {
-const navigate = useNavigate();
-const [searchParams, setSearchParams] = useSearchParams();
+  const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
+
   // Estado para armazenar os processos
   const [processos, setProcessos] = useState<ProcessoCompra[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
-  
+
   // Estado para paginação
   const [page, setPage] = useState(parseInt(searchParams.get('page') || "1"));
   const [rowsPerPage, setRowsPerPage] = useState(parseInt(searchParams.get('rows') || "-1"));
-  
+
   // Estado para ordenação
   const [order, setOrder] = useState<Order>('asc');
   const [orderBy, setOrderBy] = useState<OrderBy>('nup');
 
+  //Estado para filtros de colunas
+  const [categoriasUnicas, setCategoriasUnicas] = useState<string[]>([])
+  const [categoriaFiltro, setCategoriaFiltro] = useState<string | null>(null);
+
+
   // Opções de quantidade de itens por página
   const rowsPerPageOptions = [
-    {value: 10, label: "10"},
-    {value: 20, label: "20"},
-    {value: 50, label: "50"},
-    {value: -1, label: "Todos"}
+    { value: 10, label: "10" },
+    { value: 20, label: "20" },
+    { value: 50, label: "50" },
+    { value: -1, label: "Todos" }
   ];
-  
+
   // Função para buscar processos do Firestore
   const fetchProcessos = async () => {
     setLoading(true);
@@ -70,103 +80,110 @@ const [searchParams, setSearchParams] = useSearchParams();
         };
       });
       setProcessos(processosList);
+      const categoriasUnicas = Array.from(new Set(processosList.map(p => p.categoria))).filter(Boolean);
+      setCategoriasUnicas(categoriasUnicas)
+
     } catch (error) {
       console.error("Erro ao buscar processos:", error);
     } finally {
       setLoading(false);
     }
   };
-  
+
   // Carregar processos quando o componente montar
   useEffect(() => {
     fetchProcessos();
   }, []);
-  
+
+  useEffect(() => {
+    setPage(0);
+  }, [categoriaFiltro]);
+
   // Funções para manipular a paginação
   const handleChangePage = (event: unknown, newPage: number) => {
     setPage(newPage);
-    setSearchParams({page: newPage.toString(), rows: rowsPerPage.toString()})
+    setSearchParams({ page: newPage.toString(), rows: rowsPerPage.toString() })
   };
-  
+
   const handleChangeRowsPerPage = (event: React.ChangeEvent<HTMLInputElement>) => {
     const rpp = parseInt(event.target.value, 10)
     setRowsPerPage(rpp);
     setPage(0);
-    setSearchParams({page: "0", rows: rpp.toString()})
+    setSearchParams({ page: "0", rows: rpp.toString() })
   };
-  
+
   // Função para lidar com a solicitação de ordenação
   const handleRequestSort = (property: OrderBy) => {
     const isAsc = orderBy === property && order === 'asc';
     setOrder(isAsc ? 'desc' : 'asc');
     setOrderBy(property);
   };
-  
+
   // Função personalizada para comparar NUPs considerando o ano primeiro
-    function compareNUPs(nupA: string, nupB: string): number {
+  function compareNUPs(nupA: string, nupB: string): number {
     // Extrair o ano do NUP (assumindo que esteja após o último hífen)
     const getYear = (nup: string): number => {
-        const parts = nup.split('-');
-        return parts.length > 1 ? parseInt(parts[parts.length - 1], 10) : 0;
+      const parts = nup.split('-');
+      return parts.length > 1 ? parseInt(parts[parts.length - 1], 10) : 0;
     };
 
     // Extrair o número principal (parte antes do ano)
     const getMainNumber = (nup: string): string => {
-        const parts = nup.split('-');
-        return parts.length > 1 ? parts[0] : nup;
+      const parts = nup.split('-');
+      return parts.length > 1 ? parts[0] : nup;
     };
 
     // Primeiro comparar os anos
     const yearA = getYear(nupA);
     const yearB = getYear(nupB);
-    
+
     if (yearA !== yearB) {
-        return yearA - yearB; // Ordem crescente por ano
+      return yearA - yearB; // Ordem crescente por ano
     }
-    
+
     // Se os anos forem iguais, comparar o resto do número
     const mainA = getMainNumber(nupA);
     const mainB = getMainNumber(nupB);
-    
+
     return mainA.localeCompare(mainB);
-    }
+  }
 
   // Função para comparar colunas ao ordenar
- function compareValues(a: ProcessoCompra, b: ProcessoCompra, orderBy: OrderBy) {
-  // Tratamento especial para o campo NUP
-  if (orderBy === 'nup') {
-    return compareNUPs(a.nup, b.nup);
+  function compareValues(a: ProcessoCompra, b: ProcessoCompra, orderBy: OrderBy) {
+    // Tratamento especial para o campo NUP
+    if (orderBy === 'nup') {
+      return compareNUPs(a.nup, b.nup);
+    }
+    //lógica para ordenação por quantidade dos objetos comprados
+    if (orderBy === 'quantidade') {
+      const qntA = Number(a[orderBy])
+      const qntB = Number(b[orderBy])
+      if (qntA < qntB) return -1;
+      if (qntA > qntB) return 1;
+      if (qntA === qntB) return 0
+    }
+    //lógica de ordenação pelo valor R$
+    if (orderBy === 'valor') {
+      const qntA = a[orderBy]
+      const qntB = b[orderBy]
+      if (qntA < qntB) return -1;
+      if (qntA > qntB) return 1;
+      if (qntA === qntB) return 0
+    }
+
+    // Lógica existente para os outros campos
+    const valueA = String(a[orderBy]).toLowerCase();
+    const valueB = String(b[orderBy]).toLowerCase();
+
+    if (valueA < valueB) {
+      return -1;
+    }
+    if (valueA > valueB) {
+      return 1;
+    }
+    return 0;
   }
-  //lógica para ordenação por quantidade dos objetos comprados
-  if (orderBy === 'quantidade'){
-    const qntA = Number(a[orderBy])
-    const qntB = Number(b[orderBy])
-    if(qntA<qntB) return -1;
-    if(qntA>qntB) return 1;
-    if(qntA===qntB) return 0
-  }
-  //lógica de ordenação pelo valor R$
-  if (orderBy === 'valor'){
-    const qntA = a[orderBy]
-    const qntB = b[orderBy]
-    if(qntA<qntB) return -1;
-    if(qntA>qntB) return 1;
-    if(qntA===qntB) return 0
-  }
-  
-  // Lógica existente para os outros campos
-  const valueA = String(a[orderBy]).toLowerCase();
-  const valueB = String(b[orderBy]).toLowerCase();
-  
-  if (valueA < valueB) {
-    return -1;
-  }
-  if (valueA > valueB) {
-    return 1;
-  }
-  return 0;
-}
-  
+
   // Função para estabilizar a ordenação
   function stableSort(array: ProcessoCompra[], comparator: (a: ProcessoCompra, b: ProcessoCompra) => number) {
     const stabilizedThis = array.map((el, index) => [el, index] as [ProcessoCompra, number]);
@@ -177,25 +194,33 @@ const [searchParams, setSearchParams] = useSearchParams();
     });
     return stabilizedThis.map((el) => el[0]);
   }
-  
+
   // Função que retorna uma função de comparação baseada na ordem atual
   function getComparator(order: Order, orderBy: OrderBy): (a: ProcessoCompra, b: ProcessoCompra) => number {
     return order === 'desc'
       ? (a, b) => compareValues(a, b, orderBy)
       : (a, b) => -compareValues(a, b, orderBy);
   }
-  
-  // Aplicar paginação e ordenação aos dados
-  let visibleRows: ProcessoCompra[] 
-  if(rowsPerPage>0){
-    visibleRows = stableSort(processos, getComparator(order, orderBy)).slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage);
+
+  // Primeiro, aplica o filtro (se houver)
+  let processosFiltrados = categoriaFiltro
+    ? processos.filter((p) => p.categoria === categoriaFiltro)
+    : processos;
+
+  // Em seguida, aplica a ordenação
+  const processosOrdenados = stableSort(processosFiltrados, getComparator(order, orderBy));
+
+  // Por fim, aplica a paginação
+  let visibleRows: ProcessoCompra[];
+  if (rowsPerPage > 0) {
+    visibleRows = processosOrdenados.slice(
+      page * rowsPerPage,
+      page * rowsPerPage + rowsPerPage
+    );
+  } else {
+    visibleRows = processosOrdenados;
   }
-  else{
-    //Quando entra nesse else, é porque selecionou "todos" em "itens por página". O valor de Todos é -1, o que buga a formula do slice acima.
-    //Então se rowsperpage é igual a -1 (Todos), visibleRows é tudão mesmo
-      visibleRows = stableSort(processos, getComparator(order, orderBy))
-    }
-  
+
   // Renderizar rótulo de "Todos" na paginação
   const getLabelDisplayedRows = ({ from, to, count }: { from: number; to: number; count: number }) => {
     return `${from}–${to} de ${count !== -1 ? count : `mais de ${to}`}`;
@@ -214,21 +239,21 @@ const [searchParams, setSearchParams] = useSearchParams();
     borderBottom: '1px solid rgba(224, 224, 224, 1)'
   }
 
- 
+
   return (
     <Box>
       <Typography variant="h4" component="h1" gutterBottom>
         Consultar Processos
       </Typography>
-      
+
       <Typography variant="subtitle1" gutterBottom color="text.secondary">
         Visualize e gerencie os processos cadastrados no SIGECON-PM
       </Typography>
-      
+
       <Card elevation={2} sx={{ mt: 1 }}>
-        <CardHeader 
-          title="Processos Cadastrados" 
-          titleTypographyProps={{ variant: 'h6' }} 
+        <CardHeader
+          title="Processos Cadastrados"
+          titleTypographyProps={{ variant: 'h6' }}
         />
         <Divider />
         <CardContent>
@@ -238,7 +263,7 @@ const [searchParams, setSearchParams] = useSearchParams();
             </Box>
           ) : (
             <>
-              <TableContainer component={Paper} sx={{ mb: 2, maxHeight: "85vh"}}>
+              <TableContainer component={Paper} sx={{ mb: 2, maxHeight: "85vh" }}>
                 <Table stickyHeader sx={{ minWidth: 650 }} aria-label="tabela de processos">
                   <TableHead sx={{
                     '& .MuiTableCell-root': {
@@ -292,7 +317,24 @@ const [searchParams, setSearchParams] = useSearchParams();
                         >
                           Categoria
                         </TableSortLabel>
+                        <FormControl fullWidth size="small" sx={{ mt: 1 }}>
+                          <Select
+                            displayEmpty
+                            value={categoriaFiltro ?? ''}
+                            onChange={(e) =>
+                              setCategoriaFiltro(e.target.value === '' ? null : e.target.value)
+                            }
+                          >
+                            <MenuItem value="">Todas</MenuItem>
+                            {categoriasUnicas.map((cat) => (
+                              <MenuItem key={cat} value={cat}>
+                                {cat}
+                              </MenuItem>
+                            ))}
+                          </Select>
+                        </FormControl>
                       </TableCell>
+
                       <TableCell>
                         <TableSortLabel
                           active={orderBy === 'objeto'}
@@ -344,20 +386,20 @@ const [searchParams, setSearchParams] = useSearchParams();
                     {visibleRows.length > 0 ? (
                       visibleRows.map((processo) => (
                         <TableRow
-                            key={processo.nup}
-                            hover
-                            sx={{
-                                '&:last-child td, &:last-child th': { border: 0 },
-                                '&:hover': {
-                                backgroundColor: 'rgba(0, 0, 0, 0.04)', 
-                                },
-                            }}
-                            >
+                          key={processo.nup}
+                          hover
+                          sx={{
+                            '&:last-child td, &:last-child th': { border: 0 },
+                            '&:hover': {
+                              backgroundColor: 'rgba(0, 0, 0, 0.04)',
+                            },
+                          }}
+                        >
 
                           <TableCell>
                             <Tooltip title="Ver detalhes">
-                              <IconButton 
-                                size="small" 
+                              <IconButton
+                                size="small"
                                 onClick={() => handleVerProcesso(processo.nup)}
                                 color="primary"
                               >
@@ -371,18 +413,18 @@ const [searchParams, setSearchParams] = useSearchParams();
                           <TableCell>{processo.uopm_beneficiada}</TableCell>
                           <TableCell>{processo.categoria}</TableCell>
                           <TableCell>
-                            {processo.objeto.length > 100 
-                              ? `${processo.objeto.substring(0, 100)}...` 
+                            {processo.objeto.length > 100
+                              ? `${processo.objeto.substring(0, 100)}...`
                               : processo.objeto}
                           </TableCell>
                           <TableCell>{processo.quantidade}</TableCell>
                           <TableCell>
-                            {new Intl.NumberFormat('pt-BR', { 
-                              style: 'currency', 
-                              currency: 'BRL' 
+                            {new Intl.NumberFormat('pt-BR', {
+                              style: 'currency',
+                              currency: 'BRL'
                             }).format(processo.valor)}
                           </TableCell>
-                          <TableCell sx={{color: `${decidirCor(processo.data_etapa_mais_recente)}`}}>{formatarData(processo.data_etapa_mais_recente)}</TableCell>
+                          <TableCell sx={{ color: `${decidirCor(processo.data_etapa_mais_recente)}` }}>{formatarData(processo.data_etapa_mais_recente)}</TableCell>
                           <TableCell>{processo.status}</TableCell>
                         </TableRow>
                       ))
@@ -422,7 +464,7 @@ const [searchParams, setSearchParams] = useSearchParams();
                 }}
                 rowsPerPageOptions={rowsPerPageOptions}
                 component="div"
-                count={processos.length}
+                count={processosFiltrados.length}
                 rowsPerPage={rowsPerPage}
                 page={page}
                 onPageChange={handleChangePage}

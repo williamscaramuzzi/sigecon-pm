@@ -414,11 +414,11 @@ const RelatorioGeral: React.FC = () => {
                     }} >
                         Relatório Geral
                     </Typography>
-                    <Card id='Card_processos_totais'
+                    <Card id='card_processos_totais'
                         sx={{
                             width: '100%',
                             elevation: 2,
-                            display: 'inline-block',
+                            mt: 1,
                             '@media print': {
                                 breakInside: 'avoid',
                                 pageBreakInside: 'avoid',
@@ -451,7 +451,7 @@ const RelatorioGeral: React.FC = () => {
                                 padding: 0,
                             },
                         }}>
-                            <Grid container spacing={0} sx={{
+                            <Grid container spacing={1} sx={{
                                 width: "100%",
                                 margin: 0,
                                 padding: 0,
@@ -541,7 +541,7 @@ const RelatorioGeral: React.FC = () => {
                         sx={{
                             width: '100%',
                             elevation: 2,
-                            mt: 0,
+                            mt: 1,
                             '@media print': {
                                 transform: 'scale(0.85)',
                                 transformOrigin: 'top left',
@@ -634,15 +634,13 @@ const RelatorioGeral: React.FC = () => {
                         sx={{
                             width: '100%',
                             elevation: 2,
-                            mt: 0,
+                            mt: 1,
                             '@media print': {
                                 transform: 'scale(0.85)',
                                 transformOrigin: 'top left',
                                 breakBefore: 'page',
                                 pageBreakBefore: 'always',
                                 breakInside: 'avoid',
-                                pageBreakInside: 'avoid',
-                                padding: 0
                             },
                         }}
                     >
