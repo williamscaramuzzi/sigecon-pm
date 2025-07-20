@@ -17,13 +17,16 @@ import {
   CardHeader,
   Divider,
   Tooltip,
-  CircularProgress, 
-  Select, 
-  MenuItem, 
-  FormControl
+  CircularProgress,
+  Select,
+  MenuItem,
+  FormControl,
+  TextField
 } from '@mui/material';
 import {
-  Visibility as VisibilityIcon
+  Visibility as VisibilityIcon,
+  FilterAlt as FilterIcon,
+  Close as CloseIcon
 } from '@mui/icons-material';
 import { collection, getDocs } from 'firebase/firestore';
 import { db } from '../config/firebase';
@@ -56,6 +59,11 @@ const ConsultarProcessos: React.FC = () => {
   //Estado para filtros de colunas
   const [categoriasUnicas, setCategoriasUnicas] = useState<string[]>([])
   const [categoriaFiltro, setCategoriaFiltro] = useState<string | null>(null);
+  const [mostrarSelectCategoria, setMostrarSelectCategoria] = useState(false);
+  const [mostrarFiltroObjeto, setMostrarFiltroObjeto] = useState(false);
+  const [textoObjetoFiltro, setTextoObjetoFiltro] = useState('');
+
+
 
 
   // Opções de quantidade de itens por página
@@ -202,10 +210,14 @@ const ConsultarProcessos: React.FC = () => {
       : (a, b) => -compareValues(a, b, orderBy);
   }
 
-  // Primeiro, aplica o filtro (se houver)
-  let processosFiltrados = categoriaFiltro
-    ? processos.filter((p) => p.categoria === categoriaFiltro)
-    : processos;
+  // Primeiro, aplica os filtros, seja da categoria ou objeto
+  let processosFiltrados = processos.filter((p) => {
+    const correspondeCategoria = !categoriaFiltro || p.categoria === categoriaFiltro;
+    const correspondeObjeto = p.objeto.toLowerCase().includes(textoObjetoFiltro.toLowerCase());
+
+    return correspondeCategoria && correspondeObjeto;
+  });
+
 
   // Em seguida, aplica a ordenação
   const processosOrdenados = stableSort(processosFiltrados, getComparator(order, orderBy));
@@ -309,41 +321,93 @@ const ConsultarProcessos: React.FC = () => {
                           UOPM Beneficiada
                         </TableSortLabel>
                       </TableCell>
-                      <TableCell>
-                        <TableSortLabel
-                          active={orderBy === 'categoria'}
-                          direction={orderBy === 'categoria' ? order : 'asc'}
-                          onClick={() => handleRequestSort('categoria')}
-                        >
-                          Categoria
-                        </TableSortLabel>
-                        <FormControl fullWidth size="small" sx={{ mt: 1 }}>
-                          <Select
-                            displayEmpty
-                            value={categoriaFiltro ?? ''}
-                            onChange={(e) =>
-                              setCategoriaFiltro(e.target.value === '' ? null : e.target.value)
-                            }
-                          >
-                            <MenuItem value="">Todas</MenuItem>
-                            {categoriasUnicas.map((cat) => (
-                              <MenuItem key={cat} value={cat}>
-                                {cat}
-                              </MenuItem>
-                            ))}
-                          </Select>
-                        </FormControl>
-                      </TableCell>
 
                       <TableCell>
-                        <TableSortLabel
-                          active={orderBy === 'objeto'}
-                          direction={orderBy === 'objeto' ? order : 'asc'}
-                          onClick={() => handleRequestSort('objeto')}
-                        >
-                          Objeto
-                        </TableSortLabel>
+                        <Box display="flex" alignItems="center">
+                          <TableSortLabel
+                            active={orderBy === 'categoria'}
+                            direction={orderBy === 'categoria' ? order : 'asc'}
+                            onClick={() => handleRequestSort('categoria')}
+                          >
+                            Categoria
+                          </TableSortLabel>
+                          <IconButton size="small" onClick={() => setMostrarSelectCategoria(!mostrarSelectCategoria)}>
+                            <FilterIcon fontSize="small" />
+                          </IconButton>
+                        </Box>
+
+                        {mostrarSelectCategoria && (
+                          <Box mt={1} display="flex" alignItems="center">
+                            <FormControl fullWidth size="small">
+                              <Select
+                                value={categoriaFiltro ?? ''}
+                                onChange={(e) =>
+                                  setCategoriaFiltro(e.target.value === '' ? null : e.target.value)
+                                }
+                                displayEmpty
+                              >
+                                <MenuItem value="">Todas</MenuItem>
+                                {categoriasUnicas.map((cat) => (
+                                  <MenuItem key={cat} value={cat}>
+                                    {cat}
+                                  </MenuItem>
+                                ))}
+                              </Select>
+                            </FormControl>
+                            <IconButton
+                              size="small"
+                              onClick={() => {
+                                setCategoriaFiltro(null);
+                                setMostrarSelectCategoria(false);
+                              }}
+                              sx={{ ml: 1 }}
+                            >
+                              <CloseIcon fontSize="small" />
+                            </IconButton>
+                          </Box>
+                        )}
                       </TableCell>
+
+
+                      <TableCell>
+                        <Box display="flex" alignItems="center">
+                          <TableSortLabel
+                            active={orderBy === 'objeto'}
+                            direction={orderBy === 'objeto' ? order : 'asc'}
+                            onClick={() => handleRequestSort('objeto')}
+                          >
+                            Objeto
+                          </TableSortLabel>
+                          <IconButton size="small" onClick={() => setMostrarFiltroObjeto(!mostrarFiltroObjeto)}>
+                            <FilterIcon fontSize="small" />
+                          </IconButton>
+                        </Box>
+
+                        {mostrarFiltroObjeto && (
+                          <Box mt={1} display="flex" alignItems="center">
+                            <TextField
+                              size="small"
+                              variant="standard"
+                              placeholder="Filtrar objeto"
+                              value={textoObjetoFiltro}
+                              onChange={(e) => setTextoObjetoFiltro(e.target.value)}
+                              fullWidth
+                            />
+                            <IconButton
+                              size="small"
+                              onClick={() => {
+                                setTextoObjetoFiltro('');
+                                setMostrarFiltroObjeto(false);
+                              }}
+                              sx={{ ml: 1 }}
+                            >
+                              <CloseIcon fontSize="small" />
+                            </IconButton>
+                          </Box>
+                        )}
+                      </TableCell>
+
+
                       <TableCell>
                         <TableSortLabel
                           active={orderBy === 'quantidade'}
